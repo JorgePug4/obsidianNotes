@@ -54,6 +54,3 @@
 1.  **Unit Tests:** Validación de lógica interna.
 2.  **Contract Tests:** Garantizar compatibilidad de APIs entre servicios.
 3.  **Integration Tests:** Pruebas con dependencias externas reales.
-
-
-test
