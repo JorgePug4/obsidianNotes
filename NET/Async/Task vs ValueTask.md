@@ -94,3 +94,5 @@ await Task.WhenAll(vt1.AsTask(), vt2.AsTask());[cite: 1, 2]
 1. **Por defecto:** Usa **`Task<T>`**. Es más seguro y fácil de razonar[cite: 1, 2].
     
 2. **Optimización:** Usa **`ValueTask<T>`** solo cuando el _profiling_ revele que las asignaciones de `Task` en rutas críticas (_hot paths_) son un cuello de botella real[cite: 1, 2].
+
+Cambio por device
