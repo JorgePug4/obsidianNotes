@@ -2,7 +2,7 @@
 ## 1. 🎯 Principios de Diseño (Core)
 * **Descomposición por Dominio (DDD):** Identificación de *Bounded Contexts* para definir límites claros.
 * **Autonomía Total:** Despliegue, escalado y evolución independiente.
-* **Database-per-Service:** Evita el acoplamiento a nivel de datos; cada servicio es dueño de su persistencia.
+* **Database-per-Service:** Evita el acoplamiento a nivel de datos; cada servicio es dueño de su persistencia. [[Bases de Datos SQL vs NoSQL]]
 * **Desacoplamiento Operacional:** Minimizar dependencias en tiempo de ejecución.
 
 > 💡 **Pro-Tip:** Si el cambio en un servicio requiere desplegar otros dos, tus microservicios están "fuertemente acoplados". Revisa tus límites de dominio.
