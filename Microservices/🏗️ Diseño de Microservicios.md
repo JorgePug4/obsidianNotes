@@ -10,11 +10,11 @@
 ---
 
 ## 2. 📡 Estrategias de Comunicación
-| Estilo | Protocolo | Caso de Uso |
-| :--- | :--- | :--- |
-| **Síncrona** | `gRPC` | Comunicación interna de alto rendimiento (Service-to-Service). |
-| **Síncrona** | `REST` | Exposición de servicios hacia el exterior o Frontends. |
-| **Asíncrona** | `Broker` | Eventos para desacoplamiento (RabbitMQ, Service Bus, Kafka). |
+| Estilo        | Protocolo | Caso de Uso                                                    |
+| :------------ | :-------- | :------------------------------------------------------------- |
+| **Síncrona**  | `gRPC`    | Comunicación interna de alto rendimiento (Service-to-Service). |
+| **Síncrona**  | `REST`    | Exposición de servicios hacia el exterior o Frontends.         |
+| **Asíncrona** | `Broker`  | Eventos para desacoplamiento (RabbitMQ, Service Bus, Kafka).   |
 
 ---
 
