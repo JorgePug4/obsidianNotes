@@ -64,7 +64,7 @@ Son objetos que poseen una **identidad única y continua** a lo largo del tiempo
     * Dos entidades son iguales únicamente si sus IDs son idénticos, sin importar si sus otros atributos coinciden o no.
 * *Ejemplo:* Un `Usuario` con ID `usr_9832`. Aunque cambie su nombre, correo y contraseña, sigue siendo el mismo usuario en el sistema.
 
-### B. Objetos de Valor (Value Objects)
+### B. **Objetos de Valor (Value Objects)**
 Son objetos que no tienen una identidad propia. Se definen única y exclusivamente por el **valor de sus atributos**.
 * **Características:**
     * Son **inmutables**. Si necesitas modificar un Objeto de Valor, debes destruir el objeto actual y crear uno nuevo por completo.
@@ -73,7 +73,7 @@ Son objetos que no tienen una identidad propia. Se definen única y exclusivamen
     * Engloban lógica de validación interna.
 * *Ejemplo:* Una `Direccion` (Calle, Altura, Código Postal) o una cantidad de `Dinero` (Monto, Divisa). Si tienes dos billetes de $100 USD, no te importa cuál es cuál; valen lo mismo por sus atributos.
 
-### C. Agregados (Aggregates) y Raíces de Agregados (Aggregate Roots)
+### **C. Agregados (Aggregates)** y Raíces de Agregados (Aggregate Roots)
 Un Agregado es un **conglomerado de Entidades y Objetos de Valor asociados** que se tratan como una única unidad de cara al cambio de datos.
 
 * **Regla de Oro:** Cada agregado posee una sola **Entidad Raíz (Aggregate Root)**. 

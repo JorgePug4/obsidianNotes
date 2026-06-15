@@ -26,12 +26,12 @@ En REST, todo es un "recurso" (usuarios, productos, fotos, facturas). Cada recur
 
 Si el endpoint es el _sustantivo_, el método HTTP es el _verbo_. Le dice al servidor qué quieres hacer con ese recurso. Los cuatro más comunes se conocen como **CRUD**:
 
-|**Método HTTP**|**Acción**|**Equivalente CRUD**|**Ejemplo de uso**|
-|---|---|---|---|
-|**GET**|Leer / Recuperar|**R**ead|Traer la lista de productos o un producto específico.|
-|**POST**|Crear|**C**reate|Crear un nuevo producto en la base de datos.|
-|**PUT / PATCH**|Actualizar|**U**pdate|Modificar el precio de un producto existente.|
-|**DELETE**|Eliminar|**D**elete|Borrar un producto.|
+| **Método HTTP** | **Acción**       | **Equivalente CRUD** | **Ejemplo de uso**                                    |
+| --------------- | ---------------- | -------------------- | ----------------------------------------------------- |
+| **GET**         | Leer / Recuperar | **R**ead             | Traer la lista de productos o un producto específico. |
+| **POST**        | Crear            | **C**reate           | Crear un nuevo producto en la base de datos.          |
+| **PUT / PATCH** | Actualizar       | **U**pdate           | Modificar el precio de un producto existente.         |
+| **DELETE**      | Eliminar         | **D**elete           | Borrar un producto.                                   |
 
 ### C. Los Códigos de Estado (Status Codes)
 
