@@ -5,4 +5,4 @@ pass:Jbp#2014600209
 Database 
 server: survivor-2026-server.database.windows.net
 user:adminsurvivor
-pass:Jbp@2014600209
+pass:Jbp$2014600209
