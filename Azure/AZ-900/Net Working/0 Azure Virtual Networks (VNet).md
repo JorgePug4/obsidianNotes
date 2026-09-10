@@ -165,13 +165,3 @@ Como el peering no es transitivo, Spoke-Prod y Spoke-Dev **no se ven entre sí**
 
 ## 🧠 Lo que debo recordar
 
-1. Una VNet es regional y de una sola suscripción; las subredes viven dentro de ella.
-2. Cada subred pierde 5 IPs por reservas de Azure (calcula siempre con eso en mente).
-3. NSG es stateful y se evalúa por prioridad; el orden de evaluación cambia según sea entrante o saliente.
-4. El Peering conecta VNets directamente pero **no es transitivo** — para eso se usa Hub and Spoke.
-5. Precedencia de ruteo: UDR > BGP > rutas del sistema, y siempre gana el prefijo más específico.
-6. Private Endpoint = IP privada real y accesible on-premises; Service Endpoint = optimización sobre IP pública.
-7. La salida a internet ya no es automática por defecto: hay que configurarla explícitamente (idealmente con NAT Gateway).
-8. `168.63.129.16` es la IP de infraestructura de Azure — jamás bloquearla.
-9. IP Forwarding en la NIC es obligatorio para que una NVA pueda reenviar tráfico.
-10. Network Watcher es la herramienta de diagnóstico oficial: úsala antes de adivinar.

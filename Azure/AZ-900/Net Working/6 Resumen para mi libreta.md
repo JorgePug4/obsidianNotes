@@ -1,0 +1,7 @@
+- **Load Balancer**: capa 4, dentro de una región, reparte tráfico TCP/UDP entre VMs.
+- **VPN Gateway**: túnel cifrado sobre internet, conecta on-prem↔Azure o VNet↔VNet. Requiere `GatewaySubnet`.
+- **Application Gateway**: capa 7, entiende HTTP, enruta por URL, hace SSL termination, opción WAF.
+- **CDN**: cachea contenido estático en edge nodes cercanos al usuario, reduce latencia global.
+- **ExpressRoute**: conexión privada dedicada, no pasa por internet, mayor SLA, sin cifrado nativo.
+- Combo típico en producción: **ExpressRoute (primario) + VPN Gateway (failover)**.
+- Combo típico web: **Application Gateway (WAF, capa 7 regional) + Front Door/CDN (global)**.
