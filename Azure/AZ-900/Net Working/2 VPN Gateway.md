@@ -14,7 +14,7 @@ Un gateway que crea un **túnel cifrado (IPsec/IKE) sobre internet público** en
 ## ¿Cómo funciona?
 
 1. Creas la `GatewaySubnet` dentro de tu VNet.
-2. Despliegas el VPN Gateway (tarda ~30-45 min en aprovisionar).
+2. Despliegas el VPN Gateway (tarda ~30 -45 min en aprovisionar).
 3. Configuras un **Local Network Gateway** representando el rango de IP de la red remota.
 4. Estableces la conexión con una **clave compartida (PSK)**.
 5. El tráfico viaja cifrado sobre internet.
