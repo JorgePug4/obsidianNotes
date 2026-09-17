@@ -95,4 +95,4 @@ Punto de entrada de toda la carpeta AZ-104. Sigue la misma filosofía que las no
 
 ## Relación con AZ-900
 
-Las notas de [[Azure/AZ-900|AZ-900]] cubren los mismos servicios a nivel de concepto. Cuando una nota de AZ-104 profundiza un tema que ya tienes en AZ-900, se enlaza (por ejemplo [[03 - Grupo de seguridad de red (NSG)]] → [[05 - Network Security Group (NSG)]]). Si un concepto de AZ-900 te falla, vuelve a esa nota antes de seguir.
+Las notas de la carpeta `Azure/AZ-900` cubren los mismos servicios a nivel de concepto. Sus puntos de entrada son [[AZ-900 - Autenticación y Autorización (índice)]], [[Almacenamiento en Azure (Índice)]], [[00 - Introduccion a Azure Networking]], [[00 - Índice - Seguridad]] y [[00 Indice - Monitorizacion y Gestion]]. Cuando una nota de AZ-104 profundiza un tema que ya tienes en AZ-900, se enlaza (por ejemplo [[03 - Grupo de seguridad de red (NSG)]] → [[05 - Network Security Group (NSG)]]). Si un concepto de AZ-900 te falla, vuelve a esa nota antes de seguir.
