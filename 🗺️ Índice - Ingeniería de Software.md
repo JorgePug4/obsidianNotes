@@ -5,7 +5,7 @@ tipo: MOC
 
 # 🗺️ Índice · Ingeniería de Software
 
-> [!info] Mapa de contenidos (MOC) de las notas técnicas de backend y arquitectura. Las notas de certificación viven en sus propios índices: [[AZ-900 - Autenticación y Autorización (índice)]], [[00 - Índice - Seguridad]], [[Almacenamiento en Azure (Índice)]], [[00 - Introduccion a Azure Networking]], [[00 Indice - Monitorizacion y Gestion]].
+> [!info] Mapa de contenidos (MOC) de las notas técnicas de backend y arquitectura. Las notas de certificación viven en sus propios índices: **AZ-900** — [[AZ-900 - Autenticación y Autorización (índice)]], [[00 - Índice - Seguridad]], [[Almacenamiento en Azure (Índice)]], [[00 - Introduccion a Azure Networking]], [[00 Indice - Monitorizacion y Gestion]]; **AI-901 (Azure AI Fundamentals)** — [[00 - AI-901 Índice general]].
 
 ## Cómo está organizado
 
@@ -55,11 +55,14 @@ tipo: MOC
 | Autenticación / autorización, `401` vs `403` | [[Autenticación vs. Autorización]], [[Microsoft Entra ID]] |
 | Zero Trust en la seguridad interna | [[Confianza cero (Zero Trust)]] |
 | Gobernanza que un Tech Lead debe conocer | [[Gobernanza en Azure]], [[Azure RBAC]] |
+| IA generativa, RAG y agentes en aplicaciones | [[Generative AI]], [[Grounding, RAG y Foundry IQ]], [[Agentes de IA (Foundry Agent Service)]] |
+| Plataforma de IA sobre la que se construyen esos servicios | [[Microsoft Foundry]] |
 
 ## Rutas de estudio sugeridas
 
 - **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Task vs ValueTask → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
+- **Preparar AI-901 (Azure AI Fundamentals):** empieza en [[00 - AI-901 Índice general]] y sigue la ruta de estudio de tres semanas que propone.
 - **Rol de Tech Lead:** Líder Técnico → Clean Architecture → DDD (estratégico) → Microservicios (cuándo no) → Gobernanza en Azure.
 
 ## Convención de las notas
