@@ -5,7 +5,7 @@ tipo: MOC
 
 # 🗺️ Índice · Ingeniería de Software
 
-> [!info] Mapa de contenidos (MOC) de las notas técnicas de backend y arquitectura. Las notas de certificación viven en sus propios índices: **AZ-900** — [[AZ-900 - Autenticación y Autorización (índice)]], [[00 - Índice - Seguridad]], [[Almacenamiento en Azure (Índice)]], [[00 - Introduccion a Azure Networking]], [[00 Indice - Monitorizacion y Gestion]]; **AI-901 (Azure AI Fundamentals)** — [[00 - AI-901 Índice general]].
+> [!info] Mapa de contenidos (MOC) de las notas técnicas de backend y arquitectura. Las notas de certificación viven en sus propios índices: **AZ-900** — [[00 - Índice - Conceptos de la nube]], [[00 - Índice - Arquitectura y cómputo]], [[AZ-900 - Autenticación y Autorización (índice)]], [[00 - Índice - Seguridad]], [[Almacenamiento en Azure (Índice)]], [[00 - Introduccion a Azure Networking]], [[00 Indice - Monitorizacion y Gestion]], [[00 - Índice - Costes y herramientas]]; **AI-901 (Azure AI Fundamentals)** — [[00 - AI-901 Índice general]].
 
 ## Cómo está organizado
 

@@ -8,7 +8,7 @@ módulo: Autenticación y autorización
 ## Los conceptos más importantes
 
 - **Autenticación** (quién eres) ocurre antes que **autorización** (qué puedes hacer). MFA, passwordless y SSO son autenticación; RBAC es autorización.
-- **Microsoft Entra ID** es el servicio de identidad en la nube (Azure AD renombrado). Gestiona usuarios, grupos, dispositivos y apps. Un tenant por suscripción.
+- **Microsoft Entra ID** es el servicio de identidad en la nube (Azure AD renombrado). Gestiona usuarios, grupos, dispositivos y apps. Cada suscripción confía en un único tenant; un tenant puede tener muchas suscripciones.
 - **Entra Connect** sincroniza AD local → Entra ID (identidad híbrida).
 - **Entra Domain Services** entrega Kerberos, LDAP y GPO como servicio administrado para apps legacy.
 - **Entra External ID** permite invitar socios (B2B, guest) y atender clientes (antes B2C).
