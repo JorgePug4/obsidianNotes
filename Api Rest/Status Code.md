@@ -1,104 +1,205 @@
-## Los Códigos Más Utilizados en APIs REST (Detalle a Detalle)
+---
+tags: [api-rest, http, backend, dotnet]
+up: "[[Diseño Api Rest]]"
+aliases: [Códigos de estado HTTP, HTTP Status Codes]
+---
 
-Vamos a desglosar los que **sí o sí** vas a usar y ver todos los días cuando programes o consumas una API:
+# Códigos de estado HTTP (Status Codes)
 
-### 🟢 Familia 2xx: Todo salió bien
+> [!info] Definidos en la **RFC 9110** (*HTTP Semantics*, 2022), que reemplaza a la RFC 7231. El registro oficial lo mantiene la IANA.
 
-#### `200 OK`
+## ¿Qué es?
 
-- **¿Para qué se usa?:** Es la respuesta estándar para peticiones exitosas.
-    
-- **Ejemplo clásico:** Haces un `GET /productos` y el servidor te regresa la lista de productos en un JSON. El código que acompaña ese JSON es un `200`.
-    
+Un **código de estado** es un número de **tres dígitos** que el servidor devuelve en cada respuesta HTTP para indicar **cómo terminó la petición**. El primer dígito define la **familia**:
 
-#### `201 Created`
+| Familia | Significado | Quién tiene la "culpa" |
+|---|---|---|
+| **1xx** | Informativo | — (raro en APIs) |
+| **2xx** | ✅ Éxito | Nadie |
+| **3xx** | ↪️ Redirección | Nadie; el recurso está en otro sitio |
+| **4xx** | ❌ Error del **cliente** | Quien hizo la petición |
+| **5xx** | 🔥 Error del **servidor** | El backend |
 
-- **¿Para qué se usa?:** Específico para cuando haces una petición de creación (`POST`) y el nuevo recurso se guardó con éxito en la base de datos.
-    
-- **Ejemplo clásico:** Envías un `POST /usuarios` para registrar una nueva cuenta. El servidor te responde con un `201` y el JSON del usuario con su nuevo ID asignado.
-    
+## ¿Para qué sirve?
 
-#### `204 No Content`
+- Permite al cliente **reaccionar sin leer el cuerpo**: reintentar (`503`), pedir login (`401`), mostrar "no encontrado" (`404`).
+- Los **intermediarios** (proxies, CDN, [[API Gateway]]) los usan para cachear, reintentar o cortar tráfico.
+- Los sistemas de **monitorización** los agregan: una subida de `5xx` es una alerta; una subida de `4xx` suele ser un cliente roto.
+- Es parte del **contrato** de una [[Diseño Api Rest|API REST]] bien diseñada.
 
-- **¿Para qué se usa?:** La petición fue exitosa, pero el servidor no tiene nada que devolverte en el cuerpo de la respuesta (sin JSON).
-    
-- **Ejemplo clásico:** Haces un `DELETE /productos/99`. El producto se borró con éxito. No tiene sentido que el servidor te regrese el producto que acabas de destruir, así que te manda un `204` para decirte "Listo, ya quedó, no hay nada más que ver aquí".
-    
+## Conceptos relacionados
 
-### 🟡 Familia 3xx: Redirecciones
+- [[Diseño Api Rest|Diseño de APIs REST]] → los códigos son uno de los 4 pilares.
+- [[Idempotencia]] → un `DELETE` repetido devuelve `404` la segunda vez y sigue siendo idempotente.
+- [[Retry con Backoff Exponencial]] → qué códigos merecen reintento (`429`, `502`, `503`, `504`) y cuáles no (`4xx`).
+- [[Circuit Breaker]] → los `5xx` y timeouts alimentan el contador de fallos.
+- [[API Gateway]] → devuelve `401`, `429`, `502`, `503`, `504` en nombre de los servicios.
+- [[Autenticación vs. Autorización]] → la diferencia exacta entre `401` y `403`.
 
-#### `301 Moved Permanently`
+## Los códigos que vas a usar todos los días
 
-- **¿Para qué se usa?:** La URL a la que estás intentando acceder cambió de nombre o de lugar para siempre. El servidor te incluye la nueva URL en los datos de la respuesta para que tu app vaya hacia allá de ahora en adelante.
-    
+### 🟢 2xx: todo salió bien
 
-#### `304 Not Modified`
+| Código | Nombre | Cuándo | Ejemplo |
+|---|---|---|---|
+| **200** | OK | Respuesta estándar de éxito con cuerpo | `GET /productos` devuelve la lista |
+| **201** | Created | Se **creó** un recurso. Incluir cabecera `Location` con la URL del nuevo recurso | `POST /usuarios` → `201` + `Location: /usuarios/57` |
+| **202** | Accepted | La petición se **aceptó pero aún no se procesó** (procesamiento asíncrono) | `POST /informes` encola la generación; devuelve `202` + URL para consultar el estado |
+| **204** | No Content | Éxito **sin cuerpo** de respuesta | `DELETE /productos/99` |
 
-- **¿Para qué se usa?:** Es crucial para el rendimiento y la velocidad de internet (Caché). Le dice a tu app: _"Oye, el recurso que me pides no ha cambiado desde la última vez que me lo pediste. Usa la copia que tienes guardada en tu memoria"_. Ahorra tiempo y datos.
-    
+> [!tip] `200` vs `201` vs `204`
+> `POST` que crea → `201`. `PUT`/`PATCH` que actualiza → `200` con el recurso actualizado, o `204` si no devuelves nada. `DELETE` → `204`.
 
-### 🔴 Familia 4xx: Errores tuyos (del programador o del usuario)
+### 🟡 3xx: redirecciones
 
-#### `400 Bad Request`
+| Código | Nombre | Cuándo |
+|---|---|---|
+| **301** | Moved Permanently | La URL cambió **para siempre**; el cliente debe actualizar sus enlaces. La nueva URL va en `Location` |
+| **302 / 307** | Found / Temporary Redirect | Redirección **temporal**. `307` garantiza que el método no cambia (un `POST` sigue siendo `POST`) |
+| **304** | Not Modified | El recurso **no ha cambiado** desde la última vez (caché condicional con `ETag` / `If-None-Match` o `Last-Modified` / `If-Modified-Since`). Ahorra ancho de banda: no se envía cuerpo |
 
-- **¿Para qué se usa?:** El servidor no puede procesar la petición porque está mal armada o los datos son inválidos. Es el equivalente a que falten campos obligatorios.
-    
-- **Ejemplo clásico:** Intentas registrar un usuario (`POST /usuarios`) pero olvidas enviar el campo `"email"`. El servidor te rechaza con un `400`.
-    
+### 🔴 4xx: el cliente hizo algo mal
 
-#### `401 Unauthorized`
+| Código | Nombre | Cuándo | Ejemplo |
+|---|---|---|---|
+| **400** | Bad Request | La petición está **mal formada** o los datos son inválidos y no hay un código más específico | JSON con sintaxis rota, falta el campo `email`, tipo incorrecto |
+| **401** | Unauthorized | **No estás autenticado**: no enviaste credenciales o el token es inválido/expiró. (El nombre es confuso; en realidad significa *Unauthenticated*) | `GET /perfil/compras` sin token |
+| **403** | Forbidden | **Sí sabemos quién eres**, pero **no tienes permiso** para esta acción. Reautenticarse no ayuda | Cliente normal intenta `DELETE /usuarios/55` |
+| **404** | Not Found | El recurso **no existe** (URL incorrecta o ID inexistente). También se usa para **ocultar** recursos a los que no tienes acceso | `GET /productos/999999` |
+| **405** | Method Not Allowed | El recurso existe, pero **no acepta ese método**. Incluir cabecera `Allow` | `DELETE /productos` (sobre la colección) |
+| **409** | Conflict | La petición **choca con el estado actual** del recurso | Crear un usuario con un email ya registrado; actualizar con una versión antigua (concurrencia optimista); repetir un `Idempotency-Key` en curso |
+| **410** | Gone | El recurso **existió** y fue eliminado permanentemente | Un recurso borrado que quieres distinguir de "nunca existió" |
+| **412** | Precondition Failed | Falló una condición `If-Match` / `If-Unmodified-Since` | Actualización con `ETag` desactualizado |
+| **415** | Unsupported Media Type | El `Content-Type` enviado no se acepta | Enviar XML a una API que solo acepta JSON |
+| **422** | Unprocessable Content | La sintaxis es correcta pero el contenido **viola reglas de validación o negocio**. (Antes "Unprocessable Entity", de WebDAV; ahora en RFC 9110) | `"edad": -5`, `"email": "esto-no-es-un-correo"`, fecha de fin anterior a la de inicio |
+| **429** | Too Many Requests | El cliente **superó el límite de peticiones** (*rate limiting*). Incluir cabecera `Retry-After` | Más de 100 peticiones/minuto con la misma API key |
 
-- **¿Para qué se usa?:** No estás autenticado en el sistema. El servidor no sabe quién eres porque no enviaste tus credenciales o tu Token de seguridad expiró.
-    
-- **Ejemplo clásico:** Intentas entrar a ver tu historial de compras (`GET /perfil/compras`), pero no has iniciado sesión.
-    
+> [!warning] `400` vs `422`: la discusión eterna
+> - **`400`**: no puedo ni leer tu petición (JSON roto, campo obligatorio ausente, tipo incorrecto).
+> - **`422`**: la leo perfectamente, pero lo que dice no es válido para el negocio.
+> Muchas APIs usan `400` para todo y es aceptable. Lo importante es **ser consistente** y devolver un cuerpo de error detallado (ver Problem Details más abajo). ASP.NET Core devuelve `400` por defecto en errores de *model validation*.
 
-#### `403 Forbidden`
+> [!warning] `401` vs `403`: pregunta de entrevista garantizada
+> - **`401`**: "¿Quién eres? No lo sé." → Falta o falla la **autenticación**. El servidor debe incluir `WWW-Authenticate`.
+> - **`403`**: "Sé quién eres, y no puedes." → Falla la **autorización**.
+> Ver [[Autenticación vs. Autorización]].
 
-- **¿Para qué se usa?:** El servidor **sí sabe quién eres**, pero no tienes permisos para hacer esa acción específica. No confundir con el 401.
-    
-- **Ejemplo clásico:** Iniciaste sesión con tu cuenta de cliente normal e intentas hacer un `DELETE /usuarios/55` (borrar a otro usuario). El servidor te dice: _"Sé quién eres, pero tú no eres administrador. Prohibido"_.
-    
+### 🔥 5xx: el servidor falló
 
-#### `404 Not Found`
+| Código | Nombre | Cuándo | Ejemplo |
+|---|---|---|---|
+| **500** | Internal Server Error | Error **genérico** no controlado en el backend | Excepción no capturada, `NullReferenceException`, división entre cero |
+| **501** | Not Implemented | El servidor **no soporta** la funcionalidad pedida | Un método HTTP que el servidor no reconoce |
+| **502** | Bad Gateway | Un **proxy o gateway** recibió una respuesta inválida del servidor de detrás | El [[API Gateway]] llama al microservicio y este devuelve basura o cierra la conexión |
+| **503** | Service Unavailable | El servidor **no puede atender ahora**: sobrecarga, mantenimiento, [[Circuit Breaker]] abierto, [[Bulkhead]] lleno. Incluir `Retry-After` | Despliegue en curso, dependencia caída |
+| **504** | Gateway Timeout | Un proxy o gateway **no recibió respuesta a tiempo** del servidor de detrás | El microservicio tardó más que el timeout del gateway |
 
-- **¿Para qué se usa?:** El recurso solicitado no existe. Puede ser porque escribiste mal la URL o porque el ID que buscas ya no está en la base de datos.
-    
-- **Ejemplo clásico:** Haces un `GET /productos/999999` y ese producto no existe en la tienda.
-    
+> [!important] Nunca filtres detalles en un `500`
+> El cuerpo de un `500` en producción no debe incluir *stack traces*, consultas SQL ni rutas internas. Devuelve un identificador de correlación (`traceId`) para buscar el error en los logs.
 
-#### `422 Unprocessable Entity`
+## ¿Cómo funciona? El cuerpo de la respuesta de error: Problem Details
 
-- **¿Para qué se usa?:** Muy común en APIs modernas. Significa que la estructura de tu JSON está bien redactada, pero el contenido lógicamente no sirve.
-    
-- **Ejemplo clásico:** Envías el campo `"edad": -5` o `"email": "esto-no-es-un-correo"`. La API entiende el formato, pero el dato no pasa las reglas de negocio.
-    
+El código dice *qué tipo* de error fue; el cuerpo debe decir *cuál exactamente*. El estándar es **Problem Details** (**RFC 9457**, que reemplaza a la RFC 7807), con `Content-Type: application/problem+json`:
 
-### 🔥 Familia 5xx: Errores del servidor (¡Alerta roja!)
+```json
+{
+  "type": "https://api.tienda.com/errores/validacion",
+  "title": "La petición contiene errores de validación",
+  "status": 422,
+  "detail": "El campo 'edad' debe ser mayor o igual que 0.",
+  "instance": "/usuarios",
+  "traceId": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "errors": {
+    "edad": ["Debe ser mayor o igual que 0."],
+    "email": ["No tiene un formato válido."]
+  }
+}
+```
 
-#### `500 Internal Server Error`
+En **ASP.NET Core** viene de serie:
 
-- **¿Para qué se usa?:** El código comodín para cuando algo salió mal en el backend y el sistema no supo cómo manejar el problema. Es un error de código, una excepción no controlada o que la base de datos se cayó.
-    
-- **Ejemplo clásico:** Hay una división entre cero en el código del servidor o se olvidaron de poner un punto y coma y la app se congeló.
-    
+```csharp
+builder.Services.AddProblemDetails();          // Program.cs
+// ...
+app.UseExceptionHandler();                     // convierte excepciones no controladas en 500 con Problem Details
+app.UseStatusCodePages();                      // añade cuerpo Problem Details a 404, 405, etc.
 
-#### `503 Service Unavailable`
+// En un endpoint:
+return Results.Problem(
+    statusCode: StatusCodes.Status409Conflict,
+    title: "El email ya está registrado",
+    detail: $"Ya existe un usuario con el email {req.Email}.");
 
-- **¿Para qué se usa?:** El servidor no está listo para manejar la petición en este momento. Suele pasar porque el servidor está saturado de visitas (tráfico masivo) o está apagado por mantenimiento programado.
-    
+// Errores de validación:
+return Results.ValidationProblem(errores);     // 400 + campo "errors"
+```
 
-## Resumen Rápido (Mnemotecnia)
+## Ejemplo: mapa de códigos para un CRUD de productos
 
-Para que nunca los olvides, un viejo chiste de desarrolladores los resume a la perfección usando la analogía de pedir una hamburguesa:
+| Petición | Éxito | Errores posibles |
+|---|---|---|
+| `GET /productos` | `200` + lista | `401` sin token |
+| `GET /productos/42` | `200` + producto | `404` no existe |
+| `POST /productos` | `201` + `Location` | `400` JSON roto · `422` precio negativo · `409` SKU duplicado · `403` sin rol admin |
+| `PUT /productos/42` | `200` o `204` | `404` · `412` ETag desactualizado · `422` |
+| `DELETE /productos/42` | `204` | `404` · `403` |
+| Cualquiera | — | `429` demasiadas peticiones · `500` bug · `503` mantenimiento |
 
-> - **200:** Aquí tienes tu hamburguesa.
->     
-> - **401:** No puedes pedir una hamburguesa hasta que pagues.
->     
-> - **403:** Sabemos que pagaste, pero no tienes permitido entrar a la cocina por tu hamburguesa.
->     
-> - **404:** No vendemos hamburguesas aquí.
->     
-> - **500:** La cocina se está incendiando.
->
+## Puntos clave
+
+- **2xx** éxito · **3xx** redirección · **4xx** culpa del cliente · **5xx** culpa del servidor.
+- `201` para creación (con `Location`), `204` para éxito sin cuerpo, `202` para asíncrono.
+- `401` = no autenticado; `403` = autenticado sin permiso.
+- `400` = petición mal formada; `422` = válida sintácticamente pero rechazada por reglas.
+- `409` para conflictos de estado y duplicados; `429` para *rate limiting*.
+- `502`/`503`/`504` son los códigos de **infraestructura y resiliencia**; son los que se **reintentan**.
+- Devuelve errores con **Problem Details** (RFC 9457).
+
+## Errores comunes
+
+- Devolver `200` con `{ "error": "no encontrado" }` en el cuerpo. Rompe cachés, monitorización y clientes.
+- Usar `500` para errores de validación del cliente.
+- Confundir `401` y `403`.
+- No incluir `Location` en un `201` ni `Retry-After` en `429`/`503`.
+- Exponer *stack traces* en producción.
+- Inventar códigos propios (`299`, `499`); usa los estándar y detalla en el cuerpo.
+
+## 🎯 Para entrevistas y exámenes
+
+- *"¿Diferencia entre 401 y 403?"* → Autenticación vs autorización.
+- *"¿Qué código devuelves al crear un recurso?"* → `201 Created` con `Location`.
+- *"¿Qué código para una operación asíncrona?"* → `202 Accepted`.
+- *"¿Qué códigos reintentarías automáticamente?"* → `429`, `502`, `503`, `504` (y timeouts). Nunca `4xx` salvo `429`.
+- *"¿Diferencia entre 502 y 504?"* → Respuesta inválida del *upstream* vs sin respuesta a tiempo.
+
+## Resumen rápido (mnemotecnia)
+
+La analogía clásica de pedir una hamburguesa:
+
+> - **200**: Aquí tienes tu hamburguesa.
+> - **201**: Hamburguesa nueva hecha; está en la bandeja 57.
+> - **202**: Tomé tu pedido; te aviso cuando esté.
+> - **204**: Listo, retiré tu bandeja; no hay nada más que ver.
+> - **304**: Es la misma hamburguesa de antes; usa la que tienes.
+> - **400**: No entiendo lo que pides.
+> - **401**: No puedes pedir hasta que te identifiques.
+> - **403**: Sabemos quién eres, pero no puedes entrar a la cocina.
+> - **404**: No vendemos hamburguesas aquí.
+> - **409**: Ya pediste esa misma hamburguesa; tienes una en curso.
+> - **422**: Entiendo el pedido, pero "hamburguesa con -2 panes" no existe.
+> - **429**: Has pedido 50 hamburguesas en un minuto; espera.
+> - **500**: La cocina se está incendiando.
+> - **502**: El mesero fue a la cocina y le respondieron en un idioma desconocido.
+> - **503**: La cocina está cerrada por mantenimiento; vuelve en 10 minutos.
+> - **504**: El mesero fue a la cocina y nunca volvió.
+
+## Referencias
+
+- RFC 9110, *HTTP Semantics*, sección 15 *Status Codes*: https://www.rfc-editor.org/rfc/rfc9110#section-15
+- RFC 9457, *Problem Details for HTTP APIs*: https://www.rfc-editor.org/rfc/rfc9457
+- IANA, *HTTP Status Code Registry*: https://www.iana.org/assignments/http-status-codes/
+- MDN, *HTTP response status codes*: https://developer.mozilla.org/docs/Web/HTTP/Status
+- Microsoft Learn, *Handle errors in ASP.NET Core APIs*: https://learn.microsoft.com/aspnet/core/web-api/handle-errors
+
+---
+⬅️ [[Diseño Api Rest|Volver a Diseño de APIs REST]] · [[🗺️ Índice - Ingeniería de Software|Índice de Ingeniería de Software]]

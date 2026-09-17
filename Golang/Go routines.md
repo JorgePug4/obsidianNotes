@@ -1,3 +1,9 @@
+---
+tags: [golang, concurrencia, tiempo-real, backend]
+up: "[[🗺️ Índice - Ingeniería de Software]]"
+aliases: [Goroutines, Goroutines y Channels, Concurrencia en Go]
+---
+
 # Goroutines y Channels para Aplicaciones en Tiempo Real
 
 ## Índice
@@ -12,6 +18,19 @@
 8. Caso completo: servidor de chat/broadcast en tiempo real
 9. Errores comunes y cómo evitarlos
 10. Checklist mental para diseñar sistemas concurrentes
+11. Puntos clave, errores comunes y preguntas de repaso
+
+## Conceptos relacionados
+
+- [[Task vs ValueTask|Task vs ValueTask en .NET]] → el otro modelo de asincronía que uso a diario; comparar `async`/`await` (cooperativo sobre el *thread pool*) con goroutines (hilos verdes M:N) ayuda a entender ambos.
+- [[Bulkhead]] → el *Worker Pool* de la sección 7.1 es un Bulkhead: limita la concurrencia hacia un recurso.
+- [[Retry con Backoff Exponencial]] → el ejercicio de reconexión con backoff de la sección final.
+- [[Circuit Breaker]] → en Go se implementa con `sony/gobreaker`; complementa los timeouts con `context`.
+- [[🏗️ Diseño de Microservicios]] → health checks, *graceful shutdown* con `context` y observabilidad aplican igual a servicios en Go.
+- [[Diseño Api Rest|Diseño de APIs REST]] → los servidores WebSocket/SSE de esta nota conviven con la API REST del mismo servicio.
+
+> [!info] Alcance de la nota
+> Está orientada a **aplicaciones en tiempo real** (chats, dashboards, notificaciones). Los fundamentos (goroutines, channels, `select`, `sync`, `context`) aplican a cualquier programa en Go.
 
 ---
 
@@ -46,7 +65,7 @@ func decirHola() {
 **Puntos clave:**
 
 - `go f()` no bloquea; la ejecución continúa inmediatamente en la goroutine actual.
-- Si `main()` termina, **todas** las goroutines mueren, hayan terminado o no. Por eso el `time.Sleep` de arriba es una mala práctica — la usamos solo para ilustrar el problema. La solución real es sincronización explícita (goroutines, `WaitGroup`, channels).
+- Si `main()` termina, **todas** las goroutines mueren, hayan terminado o no. Por eso el `time.Sleep` de arriba es una mala práctica — la usamos solo para ilustrar el problema. La solución real es sincronización explícita (`sync.WaitGroup`, channels o `context`).
 - Puedes lanzar cientos de miles de goroutines sin problema; es común en servidores que manejan una goroutine por conexión.
 
 ### Closures y la trampa clásica del loop
@@ -100,7 +119,7 @@ func main() {
 
 ### Con buffer (asíncrono hasta cierto punto)
 
-Un envío a un channel con buffer solo bloquea si el buffer está lleno. Es útil quando quieres desacoplar productor y consumidor, o absorber ráfagas de eventos (muy común en tiempo real: picos de mensajes).
+Un envío a un channel con buffer solo bloquea si el buffer está lleno. Es útil cuando quieres desacoplar productor y consumidor, o absorber ráfagas de eventos (muy común en tiempo real: picos de mensajes).
 
 ```go
 ch := make(chan int, 3)
@@ -188,9 +207,12 @@ func (c *Cliente) escuchar() {
 }
 ```
 
+> [!warning] `time.After` dentro de un `for`/`select`
+> Cada iteración crea un temporizador nuevo. Antes de **Go 1.23**, los temporizadores no seleccionados no se liberaban hasta expirar, lo que en loops muy activos generaba consumo de memoria. Desde Go 1.23 el recolector los libera, pero en código que deba correr en versiones anteriores, o para reiniciar el temporizador solo cuando toca, usa `time.NewTimer` + `Reset`, o un `time.Ticker` como en el ejemplo del `Hub` (sección 8).
+
 ---
 
-## 5. El paquete `sync`: cuándo SÍ usar locks
+## 5. El paquete `sync`: WaitGroup, Mutex, Once (cuándo SÍ usar locks)
 
 Los channels no siempre son la herramienta correcta. Para proteger estado compartido simple (un contador, un mapa de sesiones activas), un `sync.Mutex` suele ser más simple y eficiente que un channel.
 
@@ -246,6 +268,35 @@ func obtenerDB() *sql.DB {
         conexionDB = conectar()
     })
     return conexionDB
+}
+```
+
+### sync.RWMutex: muchas lecturas, pocas escrituras
+
+Cuando el mapa de clientes se **lee** mucho más de lo que se **escribe** (ej. buscar a quién enviar un mensaje), `RWMutex` permite lecturas concurrentes y solo bloquea en exclusiva al escribir:
+
+```go
+func (h *Hub) Obtener(id string) (*Cliente, bool) {
+    h.mu.RLock()         // varios lectores a la vez
+    defer h.mu.RUnlock()
+    c, ok := h.clientes[id]
+    return c, ok
+}
+```
+
+### errgroup: WaitGroup con propagación de errores y cancelación
+
+El paquete `golang.org/x/sync/errgroup` es un `WaitGroup` que además **devuelve el primer error** y **cancela el contexto** de las demás goroutines cuando una falla. Es lo que se usa en la práctica para "lanza N tareas y falla rápido si alguna falla":
+
+```go
+g, ctx := errgroup.WithContext(ctx)
+for _, url := range urls {
+    g.Go(func() error {
+        return descargar(ctx, url) // si una falla, ctx se cancela para las demás
+    })
+}
+if err := g.Wait(); err != nil {
+    log.Println("alguna descarga falló:", err)
 }
 ```
 

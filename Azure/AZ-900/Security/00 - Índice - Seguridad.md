@@ -11,7 +11,7 @@ revisado: 2026-09-14
 
 | Tema | Relevancia AZ-900 |
 |---|---|
-| [[Defensa en profundidad]] + [[Zero Trust]] | 🔴 Alta |
+| [[Defensa en profundidad]] + [[Confianza cero (Zero Trust)|Zero Trust]] | 🔴 Alta |
 | [[Microsoft Defender for Cloud]] | 🔴 Alta |
 | [[Azure Key Vault]] | 🟡 Media (aparece como opción de respuesta) |
 | [[Service Endpoints y Private Endpoints]] | 🟢 Baja (apoya el tema de redes) |
