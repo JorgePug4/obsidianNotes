@@ -184,4 +184,4 @@ Nota de consolidación de la Sección 7. Úsala el día antes del examen.
 > - Cosmos DB = NoSQL global multimodelo con SLA de hasta 99,999%.
 > - Cifrado en reposo siempre activo; redundancia no es backup.
 
-Volver al índice: [[AZ-900 - Almacenamiento (Índice)]]
+Volver al índice: [[Almacenamiento en Azure (Índice)]]
