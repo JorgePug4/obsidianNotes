@@ -20,4 +20,7 @@ Temas de este módulo:
 - [[Azure Arc]]
 - [[Azure Advisor]] (extra, sí entra en el examen)
 
+> [!info] Resto del dominio
+> La **administración de costes** (calculadoras, Cost Management, etiquetas) y las **herramientas de administración** (portal, Cloud Shell, CLI, PowerShell, plantillas ARM/Bicep) pertenecen a este mismo dominio y están en [[00 - Índice - Costes y herramientas]].
+
 ---
