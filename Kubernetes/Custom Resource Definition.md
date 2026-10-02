@@ -100,3 +100,6 @@ spec:
 - [[Networking#Kubernetes Gateway API|Kubernetes Gateway API]]
 - [[Networking#Service Mesh|Service Mesh]]
 - [[Helm]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[09 - Seguridad]] · Índice: [[00 - Kubernetes - Índice]]

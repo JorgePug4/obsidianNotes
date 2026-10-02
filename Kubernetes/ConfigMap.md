@@ -97,3 +97,6 @@ spec:
 - [[Volume]]
 - [[Workloads#Pod|Pod]]
 - [[Workloads#Deployment|Deployment]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

@@ -115,3 +115,6 @@ spec:
 - [[Networking#Service Mesh|Service Mesh]]
 - [[Workloads#Deployment|Deployment]]
 - [[Secret]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[11 - Helm, Kustomize y CI-CD]] · Índice: [[00 - Kubernetes - Índice]]

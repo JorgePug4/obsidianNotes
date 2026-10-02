@@ -210,6 +210,9 @@ spec:
 ### Para qué sirve
 Genera una dirección IP pública estática y externa mediante la intervención del componente `Cloud Controller Manager`, permitiendo que cualquier usuario desde Internet pueda acceder a la aplicación.
 
+> [!note] Corrección (auditoría 2026-10)
+> La IP **no es necesariamente estática**: el proveedor la asigna al crear el Service y la **libera al borrarlo**. Para una IP fija hay que reservarla en la nube y referenciarla (p. ej. `spec.loadBalancerIP`, ya obsoleto, o anotaciones del proveedor como `service.beta.kubernetes.io/azure-pip-name`). Tampoco es siempre pública: con anotaciones se crean **balanceadores internos** (p. ej. `service.beta.kubernetes.io/azure-load-balancer-internal: "true"`). Un `LoadBalancer` es en realidad un `NodePort` + `ClusterIP` con un balanceador externo delante. Más en [[04 - Networking y tráfico]].
+
 > [!warning] Comportamiento en clústeres locales o Minikube
 > El tipo `LoadBalancer` solo funciona de forma nativa en proveedores de nube públicos. Si se aplica en entornos locales como Minikube o KIND sin controladores adicionales (como MetalLB), la columna de IP externa permanecerá de forma indefinida en estado `<pending>`.
 
@@ -248,11 +251,6 @@ spec:
 - [[Networking#NodePort|NodePort]]
 - [[Networking#Ingress|Ingress]]
 - [[Cloud Controller Manager]]
-
----
-
-¿Te gustaría proceder con las siguientes notas del área de **Networking** (como `[[Networking#Headless Service|Headless Service]]`, `[[Networking#Ingress|Ingress]]`, `[[Networking#Ingress Controller|Ingress Controller]]`, `[[Networking#Kube-proxy|Kube-proxy]]`, `[[Networking#Service Mesh|Service Mesh]]`, `[[Networking#CNI|CNI]]`) o prefieres cambiar a otra categoría?
-Aquí tienes las notas completas en formato Markdown para tu bóveda de Obsidian, correspondientes a los conceptos solicitados del área de **Networking**: **Headless Service**, **Ingress**, **Ingress Controller** y **Kubernetes Gateway API**.
 
 ---
 
@@ -372,12 +370,22 @@ Un **Ingress Controller** es una aplicación o controlador en ejecución (desple
 ### Para qué sirve
 Sirve como el componente ejecutor que traduce las reglas lógicas declaradas en los manifiestos [[Networking#Ingress|Ingress]] y las evalúa en tiempo real para configurar y actualizar el software proxy o el balanceador de carga subyacente (por ejemplo, actualizando dinámicamente el archivo de configuración `nginx.conf` o las reglas del balanceador de la nube). Sin un Ingress Controller activo, los objetos Ingress no tienen ningún efecto en el clúster.
 
+> [!note] Corrección (auditoría 2026-10): `ingress-nginx` está retirado
+> El controlador comunitario **`kubernetes/ingress-nginx`** (el que instala `minikube addons enable ingress` y el más usado en tutoriales) fue **retirado por SIG Network**: anunciado en noviembre de 2025, con mantenimiento solo hasta **marzo de 2026**. Ya no recibe releases ni parches de seguridad. Los clústeres existentes siguen funcionando, pero para proyectos nuevos:
+> - **Gateway API** con una implementación mantenida (Envoy Gateway, Istio, Cilium, NGINX Gateway Fabric, Traefik, Kong, Application Gateway for Containers en Azure...). Ver [[Networking#Kubernetes Gateway API|Gateway API]].
+> - U otro Ingress Controller mantenido (Traefik, HAProxy, Kong, el **NGINX Ingress Controller de F5/NGINX Inc.** —proyecto distinto—, o el controlador gestionado del proveedor: AWS Load Balancer Controller, AGIC/AGC en Azure, GKE Ingress).
+>
+> Para **aprender** en local sigue siendo útil, porque los conceptos de Ingress no cambian.
+
+> [!tip] IngressClass
+> Si hay varios controladores, cada Ingress elige el suyo con `spec.ingressClassName`. Una `IngressClass` con la anotación `ingressclass.kubernetes.io/is-default-class: "true"` se usa cuando no se indica ninguna.
+
 ### Ejemplo
 
 **Comandos de instalación y diagnóstico:**
 ```bash
 # Habilitar el add-on del NGINX Ingress Controller en Minikube
-minikube add-ons enable ingress
+minikube addons enable ingress
 
 # Verificar los Pods en ejecución del Ingress Controller
 kubectl get pods -n ingress-nginx
@@ -407,6 +415,13 @@ Supera las deficiencias arquitectónicas de [[Networking#Ingress|Ingress]] al es
 3. **`HTTPRoute`**: Definido por los ingenieros DevOps o desarrolladores para declarar las reglas de enrutamiento hacia los servicios.
 
 Sustituye la necesidad de usar anotaciones complejas y propietarias al ofrecer soporte nativo para funciones avanzadas de producción como la división de tráfico por peso (*weight-based traffic splitting / Canary*), reescritura de URLs (*URL rewrite*), redirecciones de tráfico, *rate limiting* y filtrado de cabeceras.
+
+> [!note] Corrección (auditoría 2026-10)
+> No todo lo anterior es "nativo" por igual. La especificación clasifica las funciones en niveles de soporte:
+> - **Core / Extended** (portables entre implementaciones): *matching* por ruta, cabeceras, query y método; **traffic splitting por peso**; redirecciones; reescritura de URL; modificación de cabeceras; *mirroring*; TLS; `GRPCRoute` (GA en v1.1). `TCPRoute`/`UDPRoute`/`TLSRoute` siguen en canal experimental.
+> - **Específico de implementación**: *rate limiting*, autenticación, WAF, reintentos avanzados... se configuran con **políticas propias** de cada producto (p. ej. `BackendTrafficPolicy` / `SecurityPolicy` en Envoy Gateway).
+>
+> Gateway API es **GA desde octubre de 2023 (v1.0)**, pero sus CRDs **no vienen instaladas** en Kubernetes: las instala la implementación o el administrador (`kubectl apply -f .../standard-install.yaml`). Comparativa con Ingress en [[18 - Trade-offs]].
 
 ### Ejemplo
 
@@ -467,11 +482,6 @@ kubectl get gatewayclass,gateway,httproute
 
 ---
 
-¿Te gustaría continuar con las notas del siguiente grupo de conceptos (como los de **Storage**: `[[Volume]]`, `[[PersistentVolume]]`, `[[PersistentVolumeClaim]]`, `[[StorageClass]]`, `[[CSI Driver]]`) o prefieres seleccionar otro tema?
-Aquí tienes las notas completas en formato Markdown para tu bóveda de Obsidian, correspondientes a los tres conceptos solicitados del área de **Networking**: **Kube-proxy**, **Service Mesh** y **CNI**.
-
----
-
 ## Kube-proxy
 
 ### Qué es
@@ -479,6 +489,15 @@ Aquí tienes las notas completas en formato Markdown para tu bóveda de Obsidian
 
 ### Para qué sirve
 Es el encargado de configurar y mantener las reglas de red y enrutamiento en el núcleo (*kernel*) de cada nodo (utilizando principalmente `iptables` en sistemas Linux, o en su defecto `ipvs`). Permite la comunicación de red entre los distintos [[Workloads#Pod|Pod]]s y gestiona el balanceo de carga básico por defecto (*round-robin*). Cuando un usuario crea un objeto de tipo [[Networking#Kubernetes Service|Kubernetes Service]] (como un [[Networking#ClusterIP|ClusterIP]] o [[Networking#NodePort|NodePort]]), `kube-proxy` entiende esta configuración y actualiza las tablas IP para redirigir automáticamente el tráfico enviado a la dirección IP o puerto del servicio hacia las direcciones IP dinámicas de los Pods de respaldo. Además, incluye lógica para priorizar el enrutamiento hacia los Pods que se ejecuten en el mismo nodo local a fin de reducir la sobrecarga de red.
+
+> [!note] Corrección (auditoría 2026-10)
+> - **Algoritmo de balanceo según el modo:** en modo **`iptables`** (el más común) la elección del Pod es **aleatoria/probabilística**, no *round-robin*. En modo **`ipvs`** sí es *round-robin* por defecto (configurable: `lc`, `sh`...). El modo **`nftables`** es **GA desde 1.33** y es el sucesor moderno de iptables en kernels recientes.
+> - **Prioridad a Pods locales: solo si se configura.** Por defecto se balancea entre **todos** los Pods del clúster. Se prefiere el nodo/zona local con `internalTrafficPolicy: Local`, `externalTrafficPolicy: Local` (conserva la IP de origen del cliente) o `trafficDistribution: PreferClose` (GA en 1.33).
+> - **No es el que lleva el tráfico** (salvo el antiguo modo *userspace*, eliminado): solo **programa reglas en el kernel**; los paquetes los enruta el kernel.
+> - **Se puede sustituir:** CNIs basados en **eBPF** como **Cilium** implementan los Services sin kube-proxy (`kubeProxyReplacement`), con mejor rendimiento a gran escala. GKE Dataplane V2 y Azure CNI Powered by Cilium lo hacen.
+> - Las IPs de los Pods de cada Service las obtiene de las **EndpointSlices** (la API antigua `Endpoints` está obsoleta desde 1.33).
+>
+> Normalmente se despliega como **DaemonSet** en `kube-system` (un Pod por nodo). Diagramas del flujo en [[04 - Networking y tráfico]].
 
 ### Ejemplo
 
@@ -522,6 +541,9 @@ Funciona inyectando un contenedor proxy secundario (*sidecar container*, habitua
 > [!warning] Impacto en recursos y latencia
 > La inyección de un contenedor *sidecar* en cada Pod intercepta todo el tráfico entrante y saliente. Esto puede añadir latencia adicional a las peticiones (debido al procesamiento y validación de cifrado) y consume recursos de memoria y CPU adicionales en cada nodo del clúster.
 
+> [!note] Ampliación (auditoría 2026-10): mallas sin sidecar
+> El modelo de sidecar ya no es el único. **Istio ambient mode** (GA desde Istio 1.24, noviembre de 2024) usa un proxy por nodo (`ztunnel`, capa 4 y mTLS) y *waypoint proxies* opcionales para capa 7, reduciendo mucho el consumo. **Cilium Service Mesh** también funciona sin sidecars con eBPF. **Linkerd** sigue con sidecars ultraligeros en Rust. Pregúntate primero si necesitas una mesh: añade complejidad operativa real; mTLS y observabilidad básica a veces se cubren con el CNI (Cilium) y OpenTelemetry.
+
 ### Ejemplo
 
 **Comandos de instalación y habilitación de Istio Service Mesh:**
@@ -563,7 +585,19 @@ Dado que ni Kubernetes ni el motor de ejecución de contenedores ([[Container Ru
 
 Ejemplos de softwares CNI mencionados en las fuentes incluyen **Calico**, **WeaveNet**, **Flannel** y plugins nativos de nube como AWS VPC CNI.
 
-> [!question] Revisar: Ejemplo de manifiesto YAML para la instalación de un CNI (las fuentes mencionan el uso de WeaveNet, Calico, Flannel y AWS VPC CNI, pero no proporcionan el manifiesto YAML completo de instalación del plugin).
+> [!note] Corrección (auditoría 2026-10)
+> - Docker **no es el Container Runtime de Kubernetes desde 1.24** (ver [[Container Runtime]]); hoy son containerd o CRI-O, y el CNI se invoca desde ellos.
+> - **Weave Net está abandonado** (Weaveworks cerró en 2024): no usarlo en clústeres nuevos.
+> - Opciones actuales: **Cilium** (eBPF, NetworkPolicies L3-L7, puede sustituir kube-proxy; el más extendido hoy y base de GKE Dataplane V2 y Azure CNI Powered by Cilium), **Calico** (NetworkPolicies muy completas, BGP), **Flannel** (simple, **no aplica NetworkPolicies** por sí solo), **AWS VPC CNI**, **Azure CNI** (Overlay o con IPs de la VNet).
+> - **El CNI decide si las [[04 - Networking y tráfico#NetworkPolicy|NetworkPolicies]] funcionan.** Si el plugin no las soporta, el objeto `NetworkPolicy` se acepta pero **no hace nada**, sin ningún error.
+
+> [!example] Instalación de un CNI (ejemplo con Cilium vía Helm, en un clúster creado sin CNI por defecto)
+> ```bash
+> helm repo add cilium https://helm.cilium.io/
+> helm install cilium cilium/cilium --namespace kube-system
+> cilium status --wait     # CLI de Cilium
+> ```
+> En kind se crea el clúster con `networking.disableDefaultCNI: true`; en minikube basta con `minikube start --cni=cilium` o `--cni=calico`.
 
 ### Ejemplo
 
@@ -582,3 +616,6 @@ curl http://<POD-IP>:80
 - [[Networking#Kube-proxy|Kube-proxy]]
 - [[Container Runtime]]
 - [[Networking#Kubernetes Service|Kubernetes Service]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[04 - Networking y tráfico]] · Índice: [[00 - Kubernetes - Índice]]

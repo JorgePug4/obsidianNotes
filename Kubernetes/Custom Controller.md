@@ -85,3 +85,6 @@ func (r *BackupReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 - [[Networking#Kubernetes Gateway API|Kubernetes Gateway API]]
 - [[Networking#Service Mesh|Service Mesh]]
 - [[Helm]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

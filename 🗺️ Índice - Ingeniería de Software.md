@@ -29,7 +29,8 @@ tipo: MOC
 │   ├── [[Task vs ValueTask|Task vs ValueTask (.NET)]]
 │   └── [[Go routines|Goroutines y Channels (Go)]]
 ├── 🐳 Contenedores
-│   └── [[Docker - Índice]]  ← MOC propio: imágenes, Dockerfile, volúmenes, redes, Compose, Swarm, producción
+│   ├── [[Docker - Índice]]  ← MOC propio: imágenes, Dockerfile, volúmenes, redes, Compose, Swarm, producción
+│   └── [[00 - Kubernetes - Índice]]  ← curso completo: arquitectura → producción, labs, troubleshooting, entrevistas
 └── 🧭 Rol y carrera
     └── [[Líder Técnico (Tech Lead)]]
 ```
@@ -67,6 +68,7 @@ tipo: MOC
 - **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Task vs ValueTask → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
 - **Aprender Docker de cero:** sigue la tabla de episodios de [[Docker - Índice]] (fundamentos → Dockerfile → volúmenes y redes → Compose → Swarm → producción) y repasa con [[Docker - Cheatsheet de comandos]].
+- **Kubernetes para un perfil Senior .NET:** después de Docker, sigue el roadmap de 10 niveles de [[00 - Kubernetes - Índice]] y termina con el [[20 - Proyecto final]].
 - **Preparar AI-901 (Azure AI Fundamentals):** empieza en [[00 - AI-901 Índice general]] y sigue la ruta de estudio de tres semanas que propone.
 - **Rol de Tech Lead:** Líder Técnico → Clean Architecture → DDD (estratégico) → Microservicios (cuándo no) → Gobernanza en Azure.
 

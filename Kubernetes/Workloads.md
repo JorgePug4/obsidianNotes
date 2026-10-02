@@ -35,6 +35,9 @@ Un **Pod** es la unidad mínima y más básica de ejecución y despliegue dentro
 ### Para qué sirve
 Sirve para encapsular y ejecutar aplicaciones o microservicios en los nodos de trabajo (*Worker Nodes*). Aunque el patrón más común es ejecutar un solo contenedor por Pod, se pueden empaquetar múltiples contenedores dentro del mismo Pod en casos específicos (como contenedores auxiliares *sidecar* o *init containers*) para que compartan comunicación mediante `localhost` y volúmenes de datos locales.
 
+> [!note] Corrección (auditoría 2026-10): qué se comparte realmente
+> Los contenedores de un Pod comparten **red** (misma IP y puertos: se hablan por `localhost`, y dos contenedores no pueden escuchar el mismo puerto) e **IPC**, y siempre se programan **en el mismo nodo**. **No comparten sistema de archivos**: cada uno tiene el suyo, y solo comparten los [[Volume|volúmenes]] que se declaren en el Pod y se monten explícitamente en cada contenedor. Los **sidecars nativos** (`initContainers` con `restartPolicy: Always`) son **GA desde 1.33**. Ciclo de vida completo, init containers y terminación ordenada en [[03 - Objetos y workloads#Pod]].
+
 > [!tip] Políticas de reinicio (`restartPolicy`)
 > La propiedad `restartPolicy` se especifica a nivel de Pod pero actúa sobre sus contenedores. Admite tres valores: `Always` (reintenta reiniciar el contenedor continuamente si se detiene), `OnFailure` (solo reinicia si el contenedor termina con un código de error distinto de 0) y `Never` (nunca reinicia el contenedor).
 
@@ -101,13 +104,16 @@ spec:
 ## ReplicaSet
 
 ### Qué es
-Un **ReplicaSet** (anteriormente conocido en versiones previas como *Replication Controller*) es un objeto y controlador del plano de control de Kubernetes cuyo objetivo principal es garantizar que un número exacto y determinado de réplicas de un [[Workloads#Pod|Pod]] idéntico se encuentren en estado de ejecución en todo momento.
+Un **ReplicaSet** (sucesor del antiguo *ReplicationController*, ver corrección abajo) es un objeto y controlador del plano de control de Kubernetes cuyo objetivo principal es garantizar que un número exacto y determinado de réplicas de un [[Workloads#Pod|Pod]] idéntico se encuentren en estado de ejecución en todo momento.
 
 ### Para qué sirve
 Proporciona escalabilidad y auto-recuperación (*auto-healing*). Monitorea de forma continua el clúster: si un Pod falla, es eliminado accidentalmente o se cae el nodo donde residía, el ReplicaSet detecta la discrepancia entre el estado deseado y el estado real y crea un nuevo Pod de forma automática para reemplazarlo. Identifica qué Pods le pertenecen utilizando etiquetas y selectores (`labels` y `selectors`).
 
 > [!tip] Uso indirecto recomendado
 > Aunque es posible definir y crear un ReplicaSet de forma independiente, en la práctica habitual de DevOps no se gestionan directamente. En su lugar, se utilizan los [[Workloads#Deployment|Deployment]], los cuales administran automáticamente el ciclo de vida de los ReplicaSets subyacentes.
+
+> [!note] Corrección (auditoría 2026-10): ReplicaSet ≠ ReplicationController
+> No es un cambio de nombre: son **dos objetos distintos** que conviven en la API. `ReplicationController` (`v1`) es el original y solo admite selectores por **igualdad** (`app=web`). `ReplicaSet` (`apps/v1`) es su sucesor y admite selectores **por conjuntos** (`matchExpressions` con `In`, `NotIn`, `Exists`). El RC está desaconsejado; y, en la práctica, tampoco se crean ReplicaSets a mano: se usan Deployments.
 
 > [!warning] Dependencia de Labels y Selectors
 > El ReplicaSet vincula los Pods mediante sus etiquetas (`metadata.labels`). Si un usuario modifica manualmente la etiqueta de un Pod en ejecución, el ReplicaSet dejará de contabilizarlo y creará una nueva réplica de inmediato para reponer la cantidad deseada.
@@ -170,6 +176,13 @@ Abstrae la gestión directa de Pods y [[Workloads#ReplicaSet|ReplicaSet]]. Permi
 
 > [!warning] Comportamiento ante errores de imagen
 > Si al realizar un despliegue la nueva imagen falla al descargarse (provocando un error `ImagePullBackOff` o `CrashLoopBackOff`), el Deployment detendrá la actualización paulatinamente tras fallar la primera réplica nueva, manteniendo las réplicas antiguas activas para proteger la disponibilidad del servicio.
+
+> [!note] Corrección (auditoría 2026-10)
+> **1. Estrategias nativas.** `spec.strategy.type` solo admite **`RollingUpdate`** (por defecto) y **`Recreate`**. *Canary* y *Blue-Green* **no son estrategias del Deployment**: se construyen encima (dos Deployments con un Service/Ingress/Gateway que reparte el tráfico) o con herramientas como **Argo Rollouts**, **Flagger** o una service mesh. Ver [[07 - Salud, fiabilidad y despliegues#Estrategias de despliegue]].
+>
+> **2. Qué pasa realmente cuando falla un rollout.** El Deployment no tiene lógica de "parar al primer fallo": crea Pods nuevos según `maxSurge`, y como esos Pods **nunca llegan a Ready**, `maxUnavailable` impide seguir borrando Pods antiguos. El rollout queda **atascado** (los Pods viejos siguen sirviendo). Pasado `progressDeadlineSeconds` (600 s por defecto) el Deployment se marca con la condición `Progressing=False` (`ProgressDeadlineExceeded`) y `kubectl rollout status` devuelve error. **No hay rollback automático**: hay que ejecutar `kubectl rollout undo` (o automatizarlo en el pipeline o con Argo Rollouts).
+>
+> **3. Versiones de imagen.** Los ejemplos usan `nginx:latest` y `nginx:1.14.2` (de 2018). Fija siempre una versión actual y concreta: con `latest`, `imagePullPolicy` pasa a ser `Always` por defecto y dos réplicas pueden acabar ejecutando versiones distintas.
 
 ### Ejemplo
 
@@ -240,6 +253,18 @@ A diferencia de un [[Workloads#Deployment|Deployment]], un StatefulSet mantiene 
 > [!warning] Creación y borrado estrictamente secuencial
 > Los Pods gestionados por un StatefulSet no se crean ni se borran en paralelo. La segunda réplica (`web-1`) únicamente comenzará a crearse cuando la primera (`web-0`) esté completamente activa y en estado *Running*. El borrado se realiza en orden inverso (de la réplica más alta a la menor).
 
+> [!note] Corrección (auditoría 2026-10)
+> - **El orden secuencial no es obligatorio.** Es el comportamiento de `podManagementPolicy: OrderedReady` (por defecto), y la réplica siguiente espera a que la anterior esté **Running y Ready** (no solo *Running*): una *readiness probe* mal configurada bloquea el escalado. Con `podManagementPolicy: Parallel` los Pods se crean y borran a la vez (la identidad estable se mantiene). Las **actualizaciones** (`updateStrategy: RollingUpdate`) van en orden inverso, de la réplica más alta a la `0`, y admiten `partition` para canaries.
+> - **Los PVC sí se pueden borrar automáticamente** desde **1.32 (GA)** con `persistentVolumeClaimRetentionPolicy`:
+>   ```yaml
+>   spec:
+>     persistentVolumeClaimRetentionPolicy:
+>       whenDeleted: Retain   # o Delete: borra los PVC al eliminar el StatefulSet
+>       whenScaled: Retain    # o Delete: borra los PVC de las réplicas eliminadas al escalar hacia abajo
+>   ```
+>   `Retain`/`Retain` sigue siendo el valor por defecto, así que la advertencia anterior es correcta **si no se configura**.
+> - El campo `serviceName` debe apuntar a un [[Networking#Headless Service|Headless Service]] que **hay que crear aparte**: el StatefulSet no lo crea.
+
 > [!tip] Resolución DNS individual de réplicas
 > Gracias al enlace con un [[Networking#Headless Service|Headless Service]], cada Pod dentro de un StatefulSet obtiene un registro de dominio FQDN propio (por ejemplo, `mysql-0.mydb-headless.default.svc.cluster.local`), lo que permite que clientes o réplicas secundarias se conecten directamente a un nodo específico (como un nodo maestro de lectura/escritura).
 
@@ -298,3 +323,6 @@ spec:
 - [[PersistentVolume]]
 - [[PersistentVolumeClaim]]
 - [[StorageClass]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[03 - Objetos y workloads]] · [[07 - Salud, fiabilidad y despliegues]] · Índice: [[00 - Kubernetes - Índice]]
