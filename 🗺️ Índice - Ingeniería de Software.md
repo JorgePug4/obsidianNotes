@@ -28,6 +28,8 @@ tipo: MOC
 ├── ⚙️ Lenguajes y runtime
 │   ├── [[Task vs ValueTask|Task vs ValueTask (.NET)]]
 │   └── [[Go routines|Goroutines y Channels (Go)]]
+├── 🐳 Contenedores
+│   └── [[Docker - Índice]]  ← MOC propio: imágenes, Dockerfile, volúmenes, redes, Compose, Swarm, producción
 └── 🧭 Rol y carrera
     └── [[Líder Técnico (Tech Lead)]]
 ```
@@ -41,7 +43,8 @@ tipo: MOC
 5. **Datos.** [[ACID en Bases de Datos]] explica las garantías del mundo relacional; [[Bases de Datos SQL vs NoSQL]] cuándo renunciar a parte de ellas; [[Teorema CAP y BASE]] por qué.
 6. **APIs.** [[Diseño Api Rest]] y [[Status Code]] definen el contrato con el exterior; el [[API Gateway]] es donde ese contrato se expone en microservicios.
 7. **Runtime.** [[Task vs ValueTask]] y [[Go routines]] cubren la concurrencia en los dos lenguajes que uso, con una comparación cruzada.
-8. **Rol.** El [[Líder Técnico (Tech Lead)]] es quien debe tener criterio sobre todo lo anterior.
+8. **Contenedores.** [[Docker]] es la forma habitual de empaquetar y desplegar cada microservicio; [[Docker Compose]] levanta el sistema en local y [[Redes en Docker|sus redes]] dan el descubrimiento por nombre que en producción resuelven [[Service Discovery]] o Kubernetes.
+9. **Rol.** El [[Líder Técnico (Tech Lead)]] es quien debe tener criterio sobre todo lo anterior.
 
 ## Puentes con las notas de Azure (AZ-900)
 
@@ -57,11 +60,13 @@ tipo: MOC
 | Gobernanza que un Tech Lead debe conocer | [[Gobernanza en Azure]], [[Azure RBAC]] |
 | IA generativa, RAG y agentes en aplicaciones | [[Generative AI]], [[Grounding, RAG y Foundry IQ]], [[Agentes de IA (Foundry Agent Service)]] |
 | Plataforma de IA sobre la que se construyen esos servicios | [[Microsoft Foundry]] |
+| Registro y ejecución de contenedores Docker | [[13 - Azure Container Registry]], [[14 - Azure Container Instances]], [[15 - Azure Container Apps]] |
 
 ## Rutas de estudio sugeridas
 
 - **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Task vs ValueTask → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
+- **Aprender Docker de cero:** sigue la tabla de episodios de [[Docker - Índice]] (fundamentos → Dockerfile → volúmenes y redes → Compose → Swarm → producción) y repasa con [[Docker - Cheatsheet de comandos]].
 - **Preparar AI-901 (Azure AI Fundamentals):** empieza en [[00 - AI-901 Índice general]] y sigue la ruta de estudio de tres semanas que propone.
 - **Rol de Tech Lead:** Líder Técnico → Clean Architecture → DDD (estratégico) → Microservicios (cuándo no) → Gobernanza en Azure.
 
