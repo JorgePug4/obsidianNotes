@@ -65,3 +65,6 @@ volumeBindingMode: WaitForFirstConsumer
 - [[kubelet]]
 - [[Networking#CNI|CNI]]
 - [[Helm]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

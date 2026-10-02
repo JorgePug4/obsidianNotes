@@ -84,3 +84,6 @@ spec:
 - [[CSI Driver]]
 - [[Workloads#StatefulSet|StatefulSet]]
 - [[Workloads#Pod|Pod]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

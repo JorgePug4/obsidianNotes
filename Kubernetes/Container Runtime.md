@@ -80,3 +80,6 @@ spec:
 - [[Worker Node]]
 - [[Workloads#Pod|Pod]]
 - [[Networking#CNI|CNI]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

@@ -71,3 +71,6 @@ spec:
 - [[Networking#Kubernetes Service|Kubernetes Service]]
 - [[Worker Node]]
 - [[CSI Driver]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[04 - Networking y tráfico]] · [[12 - Kubernetes en la nube]] · Índice: [[00 - Kubernetes - Índice]]

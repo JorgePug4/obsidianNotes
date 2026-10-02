@@ -69,3 +69,6 @@ spec:
 - [[Custom Controller]]
 - [[Workloads#ReplicaSet|ReplicaSet]]
 - [[Workloads#Deployment|Deployment]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

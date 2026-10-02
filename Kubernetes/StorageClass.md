@@ -67,3 +67,6 @@ allowVolumeExpansion: true
 - [[CSI Driver]]
 - [[Volume]]
 - [[Workloads#StatefulSet|StatefulSet]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

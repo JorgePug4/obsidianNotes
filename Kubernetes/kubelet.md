@@ -81,3 +81,6 @@ spec:
 - [[Workloads#Pod|Pod]]
 - [[Networking#CNI|CNI]]
 - [[CSI Driver]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · [[07 - Salud, fiabilidad y despliegues]] · Índice: [[00 - Kubernetes - Índice]]

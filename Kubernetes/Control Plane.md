@@ -70,3 +70,6 @@ ls /etc/kubernetes/manifests/
 - [[kubelet]]
 - [[Networking#Kube-proxy|Kube-proxy]]
 - [[Custom Controller]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

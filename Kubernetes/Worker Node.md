@@ -80,3 +80,6 @@ spec:
 - [[Networking#CNI|CNI]]
 - [[Networking#NodePort|NodePort]]
 - [[Workloads#Pod|Pod]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[02 - Fundamentos y arquitectura]] · [[06 - Scheduling y recursos]] · Índice: [[00 - Kubernetes - Índice]]

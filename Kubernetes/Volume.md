@@ -77,3 +77,6 @@ spec:
 - [[CSI Driver]]
 - [[ConfigMap]]
 - [[Secret]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

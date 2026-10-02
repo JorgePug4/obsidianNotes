@@ -23,6 +23,9 @@ Evita incluir información confidencial en la imagen del contenedor o en el mani
 - **`kubernetes.io/dockerconfigjson`**: credenciales para descargar imágenes de registros privados (`imagePullSecrets`).
 - **`kubernetes.io/service-account-token`**: tokens de ServiceAccounts (en versiones modernas se prefieren tokens proyectados de corta duración).
 
+> [!note] Corrección (auditoría 2026-10)
+> Desde **Kubernetes 1.24** ya **no se crea automáticamente** un Secret de token por cada ServiceAccount, y desde 1.29-1.30 los antiguos sin usar se limpian. Los Pods reciben un **token proyectado** (TokenRequest API) con caducidad y ligado al Pod, montado en `/var/run/secrets/kubernetes.io/serviceaccount/token`. Para un token puntual: `kubectl create token <serviceaccount>`. Crear a mano un Secret de este tipo (token sin caducidad) solo tiene sentido en casos muy concretos y es un riesgo. Ver [[09 - Seguridad]].
+
 > [!warning] Base64 no es cifrado
 > Los valores de `data` están codificados en **Base64**, que se decodifica trivialmente (`echo <valor> | base64 -d`). Por defecto los Secrets se guardan **sin cifrar en etcd**. Para protegerlos de verdad:
 > - Habilita el **cifrado en reposo** (`EncryptionConfiguration`, idealmente con un proveedor KMS).
@@ -93,3 +96,6 @@ spec:
 - [[Workloads#Deployment|Deployment]]
 - [[Networking#Ingress|Ingress]]
 - [[Networking#Kubernetes Gateway API|Kubernetes Gateway API]]
+
+> [!info] 📚 Estudio guiado
+> Capítulo: [[05 - Configuración y almacenamiento]] · [[09 - Seguridad]] · Índice: [[00 - Kubernetes - Índice]]
