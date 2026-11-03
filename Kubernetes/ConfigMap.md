@@ -11,35 +11,56 @@ aliases:
 
 # ConfigMap
 
-### Qué es
-Un **ConfigMap** (abreviado `cm`) es un objeto de la API de Kubernetes que guarda **datos de configuración no confidenciales** en forma de pares clave-valor (o archivos completos). Pertenece a un namespace.
+> [!abstract] En 30 segundos
+> - **Qué es:** un objeto que guarda **configuración no secreta** (pares clave-valor o archivos completos) fuera de la imagen.
+> - **Analogía:** el archivo `appsettings.json` que cambias por entorno, pero gestionado por Kubernetes.
+> - **Recuerda:** como **variable de entorno no se refresca**; como **archivo montado sí** (con retraso, y nunca con `subPath`).
 
-### Para qué sirve
-Desacopla la configuración de la imagen del contenedor: la misma imagen puede ejecutarse en desarrollo, pruebas y producción cambiando solo el ConfigMap. Un [[Workloads#Pod|Pod]] puede consumirlo de tres maneras:
-1. **Variables de entorno** individuales (`env.valueFrom.configMapKeyRef`) o todas a la vez (`envFrom`).
-2. **Archivos montados** como [[Volume]] (cada clave se convierte en un archivo).
-3. **Argumentos de línea de comandos** del contenedor, usando las variables de entorno anteriores.
+---
+
+## Qué es
+
+Un **ConfigMap** (abreviado `cm`) es un objeto de la API que guarda **datos de configuración no confidenciales**. Pertenece a un namespace.
+
+## Para qué sirve
+
+Desacopla la configuración de la imagen: **la misma imagen** corre en desarrollo, pruebas y producción cambiando solo el ConfigMap.
+
+## Tres formas de consumirlo
+
+| Forma | Cómo | ¿Se actualiza si cambia el ConfigMap? |
+|---|---|---|
+| **Variables de entorno** | `env.valueFrom.configMapKeyRef` (una) o `envFrom` (todas) | ❌ No. Hay que reiniciar los Pods |
+| **Archivos montados** | Como [[Volume]]: cada clave se convierte en un archivo | ✅ Sí, tras un breve retraso (❌ si se monta con `subPath`) |
+| **Argumentos del comando** | `args: ["--level=$(LOG_LEVEL)"]` usando las variables anteriores | ❌ No |
+
+## Errores comunes
 
 > [!warning] No guardes datos sensibles
-> Un ConfigMap se almacena y se muestra en texto plano. Contraseñas, tokens y certificados deben ir en un [[Secret]].
+> Un ConfigMap se almacena y se muestra en **texto plano**. Contraseñas, tokens y certificados van en un [[Secret]].
 
-> [!warning] Las variables de entorno no se actualizan en caliente
-> Si el ConfigMap cambia, las variables de entorno del contenedor **no** se actualizan: hay que reiniciar los Pods (ej. `kubectl rollout restart deployment <nombre>`). Los ConfigMaps montados como volumen sí se actualizan tras un breve retraso (excepto si se montan con `subPath`).
+> [!warning] "Cambié el ConfigMap y la app no se enteró"
+> Si lo consumes como variables de entorno, reinicia los Pods:
+> `kubectl rollout restart deployment <nombre>`.
+> Con Helm, el patrón habitual es una anotación `checksum/config` en la plantilla del Pod que fuerza el reinicio cuando cambia el contenido.
 
 > [!tip] Límite de tamaño
-> Un ConfigMap no puede superar **1 MiB**. Para archivos grandes usa un [[Volume]] o un [[PersistentVolumeClaim]].
+> Un ConfigMap no puede superar **1 MiB**. Para archivos grandes usa un [[Volume]] o un [[PersistentVolumeClaim]]. Si nunca va a cambiar, márcalo `immutable: true` (reduce carga en el API Server y evita cambios accidentales).
 
-### Ejemplo
+---
 
-**Comandos imperativos de gestión:**
+## Ejemplo
+
+### Comandos
+
 ```bash
-# Crear un ConfigMap desde valores literales
+# Crear desde valores literales
 kubectl create configmap app-config --from-literal=APP_ENV=production --from-literal=LOG_LEVEL=info
 
-# Crear un ConfigMap desde un archivo
+# Crear desde un archivo
 kubectl create configmap nginx-conf --from-file=nginx.conf
 
-# Listar y ver el contenido
+# Ver el contenido
 kubectl get configmap
 kubectl describe configmap app-config
 kubectl get configmap app-config -o yaml
@@ -48,7 +69,8 @@ kubectl get configmap app-config -o yaml
 kubectl rollout restart deployment python-django-app
 ```
 
-**Definición declarativa en YAML (`configmap.yaml`) y su consumo en un Deployment:**
+### YAML: ConfigMap + consumo en un Deployment
+
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -76,11 +98,11 @@ spec:
     spec:
       containers:
         - name: app
-          image: python-django-app:latest
-          envFrom:
+          image: python-django-app:1.0.0
+          envFrom:                     # ① todas las claves como variables de entorno
             - configMapRef:
                 name: app-config
-          volumeMounts:
+          volumeMounts:                # ② settings.json como archivo en /etc/app
             - name: config-files
               mountPath: /etc/app
       volumes:
@@ -92,11 +114,10 @@ spec:
                 path: settings.json
 ```
 
-### Relacionado
-- [[Secret]]
-- [[Volume]]
-- [[Workloads#Pod|Pod]]
-- [[Workloads#Deployment|Deployment]]
+---
+
+## Relacionado
+[[Secret]] · [[Volume]] · [[Workloads#Pod|Pod]] · [[Workloads#Deployment|Deployment]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

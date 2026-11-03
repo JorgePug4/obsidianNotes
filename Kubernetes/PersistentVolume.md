@@ -12,40 +12,69 @@ aliases:
 
 # PersistentVolume
 
-### Qué es
-Un **PersistentVolume** (abreviado `pv`) es un recurso del clúster que representa una pieza de almacenamiento real (un disco en la nube, un recurso NFS, un volumen iSCSI, etc.). Existe de forma independiente de cualquier [[Workloads#Pod|Pod]]: su ciclo de vida no está atado al de las aplicaciones que lo usan. A diferencia de la mayoría de los recursos, **no pertenece a un namespace** (es de ámbito de clúster).
+> [!abstract] En 30 segundos
+> - **Qué es:** la representación en Kubernetes de un **disco real** (disco en la nube, NFS, iSCSI…).
+> - **Analogía:** una plaza de aparcamiento. Existe aunque no haya coche; el [[PersistentVolumeClaim|PVC]] es el ticket que te la asigna.
+> - **Recuerda:** el PV es **de clúster** (sin namespace); el PVC es **de namespace**. Relación 1 a 1.
 
-### Para qué sirve
-Separa **quién provee el almacenamiento** (el administrador o una [[StorageClass]]) de **quién lo consume** (el desarrollador mediante un [[PersistentVolumeClaim]]). Un PV puede crearse de dos formas:
-1. **Aprovisionamiento estático**: el administrador crea el PV a mano.
-2. **Aprovisionamiento dinámico**: una [[StorageClass]] y su [[CSI Driver]] crean el PV automáticamente cuando aparece un PVC.
+---
 
-Propiedades clave:
-- **`accessModes`**: `ReadWriteOnce` (RWO, lectura/escritura desde un solo nodo), `ReadOnlyMany` (ROX), `ReadWriteMany` (RWX, varios nodos) y `ReadWriteOncePod` (RWOP, un solo Pod).
-- **`persistentVolumeReclaimPolicy`**: qué hacer con el volumen cuando se libera su PVC. `Retain` conserva los datos y requiere limpieza manual. `Delete` borra el PV y el disco subyacente. (`Recycle` está obsoleto).
-- **Estados (`STATUS`)**: `Available` → `Bound` → `Released` → (`Failed`).
+## Qué es
 
-> [!warning] `Released` no significa reutilizable
-> Con la política `Retain`, al borrar el PVC el PV pasa a `Released` pero **no** vuelve a `Available`: todavía guarda la referencia al PVC anterior y sus datos. Para reutilizarlo hay que limpiar los datos y eliminar `spec.claimRef`, o borrar y recrear el PV.
+Un **PersistentVolume** (`pv`) es un recurso del clúster que representa almacenamiento real. Su ciclo de vida es **independiente** de cualquier [[Workloads#Pod|Pod]]. No pertenece a ningún namespace.
+
+## Para qué sirve
+
+Separa **quién provee** el almacenamiento (el administrador o una [[StorageClass]]) de **quién lo consume** (el desarrollador, mediante un [[PersistentVolumeClaim]]).
+
+| Aprovisionamiento | Quién crea el PV |
+|---|---|
+| **Estático** | El administrador, a mano |
+| **Dinámico** *(lo normal)* | Una [[StorageClass]] y su [[CSI Driver]], automáticamente al aparecer un PVC |
+
+## Propiedades clave
+
+### Modos de acceso (`accessModes`)
+
+| Modo | Sigla | Significa |
+|---|---|---|
+| `ReadWriteOnce` | RWO | Lectura/escritura desde **un nodo** |
+| `ReadOnlyMany` | ROX | Solo lectura desde varios nodos |
+| `ReadWriteMany` | RWX | Lectura/escritura desde varios nodos (NFS, Azure Files, EFS…) |
+| `ReadWriteOncePod` | RWOP | Lectura/escritura desde **un solo Pod** |
 
 > [!tip] RWO es por nodo, no por Pod
-> `ReadWriteOnce` permite que varios Pods lo monten **si están en el mismo nodo**. Si necesitas exclusividad real de un solo Pod, usa `ReadWriteOncePod`.
+> `ReadWriteOnce` permite que **varios Pods** lo monten si están en el **mismo nodo**. Para exclusividad real de un Pod, usa `ReadWriteOncePod`.
 
-### Ejemplo
+### Política de reclamo (`persistentVolumeReclaimPolicy`)
 
-**Comandos útiles:**
-```bash
-# Listar los PersistentVolumes (no llevan namespace)
-kubectl get pv
+| Política | Al borrar el PVC… |
+|---|---|
+| `Retain` | Se conservan el PV y los datos. Limpieza **manual** |
+| `Delete` | Se borra el PV **y el disco** subyacente |
+| ~~`Recycle`~~ | Obsoleto |
 
-# Ver capacidad, modo de acceso, política de reclamo y a qué PVC está ligado
-kubectl describe pv pv-local-demo
+### Ciclo de vida (`STATUS`)
 
-# Eliminar un PersistentVolume
-kubectl delete pv pv-local-demo
+```mermaid
+stateDiagram-v2
+  [*] --> Available: PV creado
+  Available --> Bound: un PVC lo reclama
+  Bound --> Released: se borra el PVC
+  Released --> [*]: Delete (se borra el disco)
+  Released --> Available: Retain + limpieza manual
+  Bound --> Failed: error al reclamar
 ```
 
-**Definición declarativa en YAML (`pv.yaml`) — aprovisionamiento estático:**
+> [!warning] `Released` no significa reutilizable
+> Con `Retain`, al borrar el PVC el PV pasa a `Released` pero **no** vuelve solo a `Available`: guarda la referencia al PVC anterior y sus datos. Para reutilizarlo: limpia los datos y elimina `spec.claimRef`, o borra y recrea el PV.
+
+---
+
+## Ejemplo: aprovisionamiento estático
+
+### YAML
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolume
@@ -58,16 +87,22 @@ spec:
     - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
   storageClassName: manual
-  hostPath:
+  hostPath:                 # solo para laboratorio local
     path: /mnt/data
 ```
 
-### Relacionado
-- [[PersistentVolumeClaim]]
-- [[StorageClass]]
-- [[CSI Driver]]
-- [[Volume]]
-- [[Workloads#StatefulSet|StatefulSet]]
+### Comandos
+
+```bash
+kubectl get pv                        # sin namespace
+kubectl describe pv pv-local-demo     # capacidad, modo, política y PVC ligado
+kubectl delete pv pv-local-demo
+```
+
+---
+
+## Relacionado
+[[PersistentVolumeClaim]] · [[StorageClass]] · [[CSI Driver]] · [[Volume]] · [[Workloads#StatefulSet|StatefulSet]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

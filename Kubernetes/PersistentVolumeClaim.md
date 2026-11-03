@@ -12,41 +12,55 @@ aliases:
 
 # PersistentVolumeClaim
 
-### Qué es
-Un **PersistentVolumeClaim** (abreviado `pvc`) es una **solicitud de almacenamiento** hecha por un usuario o una aplicación. Especifica cuánto espacio necesita, con qué modo de acceso y, opcionalmente, de qué [[StorageClass]]. Kubernetes lo liga (*bind*) a un [[PersistentVolume]] que cumpla los requisitos. A diferencia del PV, el PVC **sí pertenece a un namespace**.
+> [!abstract] En 30 segundos
+> - **Qué es:** una **petición de almacenamiento**: "quiero 5 GiB, RWO, de la clase `standard`".
+> - **Analogía:** el ticket de aparcamiento. Tú pides una plaza con ciertas características; el sistema te asigna una ([[PersistentVolume|PV]]).
+> - **Recuerda:** el Pod **solo conoce el nombre del PVC**, nunca el disco real. PVC ↔ PV es 1 a 1.
 
-### Para qué sirve
-Permite que los [[Workloads#Pod|Pod]]s consuman almacenamiento persistente sin conocer los detalles de la infraestructura (tipo de disco, proveedor de nube, servidor NFS). El Pod solo referencia el nombre del PVC. La relación PVC ↔ PV es **uno a uno**.
+---
 
-Flujo típico:
-1. Se crea el PVC.
-2. Si hay un PV compatible disponible, se liga. Si no y existe una [[StorageClass]], el [[CSI Driver]] aprovisiona uno nuevo dinámicamente.
-3. El Pod monta el PVC como un [[Volume]].
+## Qué es
 
-> [!warning] Un PVC en `Pending`
-> Un PVC se queda en `Pending` cuando no existe ningún PV compatible y no hay aprovisionamiento dinámico, o cuando la StorageClass usa `volumeBindingMode: WaitForFirstConsumer` y ningún Pod lo ha consumido todavía. Revisa los eventos con `kubectl describe pvc`.
+Un **PersistentVolumeClaim** (`pvc`) es una solicitud de almacenamiento hecha por una aplicación. Indica tamaño, modo de acceso y, opcionalmente, [[StorageClass]]. Kubernetes lo liga (*bind*) a un [[PersistentVolume]] compatible. **Sí pertenece a un namespace.**
 
-> [!tip] PVC en StatefulSets
-> Un [[Workloads#StatefulSet|StatefulSet]] no crea los PVC a mano: usa `volumeClaimTemplates` para generar un PVC por réplica (ej. `www-web-0`, `www-web-1`). Estos PVC **no se borran** al eliminar el StatefulSet.
+## Para qué sirve
 
-### Ejemplo
+Que los [[Workloads#Pod|Pods]] usen almacenamiento persistente **sin conocer la infraestructura** (tipo de disco, proveedor, servidor NFS).
 
-**Comandos útiles:**
-```bash
-# Listar los PVC del namespace actual y verificar su estado (Bound / Pending)
-kubectl get pvc
+## Cómo funciona
 
-# Diagnosticar por qué un PVC no se liga
-kubectl describe pvc data-pvc
-
-# Ampliar el tamaño de un PVC (requiere allowVolumeExpansion: true en la StorageClass)
-kubectl patch pvc data-pvc -p '{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}'
-
-# Eliminar un PVC
-kubectl delete pvc data-pvc
+```mermaid
+flowchart LR
+  PVC[PVC<br/>5Gi RWO standard] --> Q{¿Hay PV<br/>compatible libre?}
+  Q -->|Sí| BIND[Bind PVC ↔ PV]
+  Q -->|No| SC[StorageClass] --> CSI[CSI Driver] -->|crea disco + PV| BIND
+  BIND --> POD[Pod monta el PVC<br/>como volume]
 ```
 
-**Definición declarativa en YAML (`pvc.yaml`) y su uso en un Pod:**
+1. Se crea el PVC.
+2. Si hay un PV compatible libre, se liga. Si no, y hay [[StorageClass]], el [[CSI Driver]] crea uno nuevo dinámicamente.
+3. El Pod monta el PVC como un [[Volume]].
+
+## Problemas típicos
+
+> [!warning] PVC atascado en `Pending`
+> | Causa | Cómo saberlo |
+> |---|---|
+> | No hay PV compatible ni aprovisionamiento dinámico | `kubectl describe pvc` → evento `no persistent volumes available` |
+> | La StorageClass usa `WaitForFirstConsumer` y ningún Pod lo usa todavía | **Normal**: se liga cuando el Pod se programa |
+> | `storageClassName` mal escrito | El evento menciona la clase inexistente |
+
+> [!tip] PVC en StatefulSets
+> Un [[Workloads#StatefulSet|StatefulSet]] no usa PVCs creados a mano: usa `volumeClaimTemplates` para generar **un PVC por réplica** (`www-web-0`, `www-web-1`…).
+> - **Por defecto** esos PVC **no se borran** al eliminar o escalar hacia abajo el StatefulSet (protege tus datos).
+> - Desde **1.32 (GA)** puedes cambiarlo con `persistentVolumeClaimRetentionPolicy` (`whenDeleted` / `whenScaled`: `Retain` o `Delete`).
+
+---
+
+## Ejemplo
+
+### YAML: PVC + Pod que lo usa
+
 ```yaml
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -67,23 +81,36 @@ metadata:
 spec:
   containers:
     - name: app
-      image: nginx:latest
+      image: nginx:1.28
       volumeMounts:
         - name: datos
           mountPath: /usr/share/nginx/html
   volumes:
     - name: datos
       persistentVolumeClaim:
-        claimName: data-pvc
+        claimName: data-pvc        # el Pod solo conoce el nombre del PVC
 ```
 
-### Relacionado
-- [[PersistentVolume]]
-- [[StorageClass]]
-- [[Volume]]
-- [[CSI Driver]]
-- [[Workloads#StatefulSet|StatefulSet]]
-- [[Workloads#Pod|Pod]]
+### Comandos
+
+```bash
+# Estado de los PVC (Bound / Pending)
+kubectl get pvc
+
+# Diagnosticar por qué no se liga
+kubectl describe pvc data-pvc
+
+# Ampliar el tamaño (requiere allowVolumeExpansion: true en la StorageClass)
+kubectl patch pvc data-pvc -p '{"spec":{"resources":{"requests":{"storage":"10Gi"}}}}'
+
+# Eliminar (¡con reclaimPolicy Delete también se borra el disco!)
+kubectl delete pvc data-pvc
+```
+
+---
+
+## Relacionado
+[[PersistentVolume]] · [[StorageClass]] · [[Volume]] · [[CSI Driver]] · [[Workloads#StatefulSet|StatefulSet]] · [[Workloads#Pod|Pod]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

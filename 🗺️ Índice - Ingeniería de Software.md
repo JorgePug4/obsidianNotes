@@ -21,7 +21,8 @@ tipo: MOC
 │   └── [[Teorema CAP y BASE]]
 ├── 💾 Datos
 │   ├── [[Bases de Datos SQL vs NoSQL]]
-│   └── [[ACID en Bases de Datos]]
+│   ├── [[ACID en Bases de Datos]]
+│   └── [[00 - Redis - Índice]]  ← curso completo: fundamentos → caché → .NET → HA y Cluster → troubleshooting
 ├── 🌐 APIs
 │   ├── [[Diseño Api Rest|Diseño de APIs REST]]
 │   └── [[Status Code|Códigos de estado HTTP]]
@@ -69,6 +70,7 @@ tipo: MOC
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
 - **Aprender Docker de cero:** sigue la tabla de episodios de [[Docker - Índice]] (fundamentos → Dockerfile → volúmenes y redes → Compose → Swarm → producción) y repasa con [[Docker - Cheatsheet de comandos]].
 - **Kubernetes para un perfil Senior .NET:** después de Docker, sigue el roadmap de 10 niveles de [[00 - Kubernetes - Índice]] y termina con el [[20 - Proyecto final]].
+- **Redis de cero a experto (perfil .NET):** empieza en [[Qué es Redis]] y sigue los 11 niveles de [[01 - Redis - Roadmap]]; el avance se lleva en [[03 - Redis - Progreso]]. Requiere Docker básico ([[Docker - Índice]]).
 - **Preparar AI-901 (Azure AI Fundamentals):** empieza en [[00 - AI-901 Índice general]] y sigue la ruta de estudio de tres semanas que propone.
 - **Rol de Tech Lead:** Líder Técnico → Clean Architecture → DDD (estratégico) → Microservicios (cuándo no) → Gobernanza en Azure.
 
