@@ -13,38 +13,56 @@ aliases:
 
 # Volume
 
-### Qué es
-Un **Volume** (volumen) es un directorio accesible para los contenedores de un [[Workloads#Pod|Pod]] y que se declara a nivel de Pod en `spec.volumes`. Cada contenedor decide dónde montarlo mediante `volumeMounts`. El tipo de volumen determina de dónde provienen los datos y cuánto tiempo sobreviven (algunos viven lo mismo que el Pod, otros persisten más allá de él).
+> [!abstract] En 30 segundos
+> - **Qué es:** un directorio que se declara **en el Pod** y que cada contenedor monta donde quiera.
+> - **Analogía:** una carpeta compartida en red. El Pod la "conecta" y cada contenedor decide en qué ruta verla.
+> - **Recuerda:** el **tipo** de volumen decide cuánto viven los datos. `emptyDir` muere con el Pod; un PVC sobrevive a él.
 
-### Para qué sirve
-Resuelve dos problemas del sistema de archivos del contenedor, que es efímero y privado:
-1. **Persistencia**: evita que los datos se pierdan cuando un contenedor se reinicia.
-2. **Compartición**: permite que varios contenedores del mismo Pod (por ejemplo, la aplicación y un *sidecar*) lean y escriban los mismos archivos.
+---
 
-Tipos más comunes:
-- **`emptyDir`**: directorio vacío creado al programar el Pod en un nodo. Sobrevive a reinicios del contenedor, pero se borra cuando el Pod se elimina. Útil para caché o archivos temporales compartidos.
-- **`hostPath`**: monta un directorio del sistema de archivos del nodo. Acopla el Pod al nodo y representa un riesgo de seguridad.
-- **`configMap` / `secret`**: proyectan un [[ConfigMap]] o un [[Secret]] como archivos.
-- **`persistentVolumeClaim`**: monta almacenamiento persistente solicitado mediante un [[PersistentVolumeClaim]].
+## Qué es
 
-> [!warning] `emptyDir` no es persistente
-> Un `emptyDir` se borra junto con el Pod. Si el Pod se reprograma en otro nodo, los datos se pierden. Para datos que deben sobrevivir al Pod usa un [[PersistentVolumeClaim]].
+Un **Volume** se declara en `spec.volumes` del [[Workloads#Pod|Pod]], y cada contenedor lo monta con `volumeMounts`. Sin volúmenes, cada contenedor tiene su propio sistema de archivos **efímero y privado**.
 
-> [!warning] Evita `hostPath` en producción
-> `hostPath` expone el sistema de archivos del nodo al contenedor y ata el Pod a un nodo específico. Resérvalo para agentes del sistema (por ejemplo, recolectores de logs desplegados como DaemonSet).
+## Para qué sirve
 
-### Ejemplo
+1. **Persistencia**: que los datos no se pierdan al reiniciarse un contenedor.
+2. **Compartición**: que varios contenedores del mismo Pod (app + *sidecar*) lean y escriban los mismos archivos.
 
-**Comandos útiles:**
-```bash
-# Ver los volúmenes declarados y montados en un Pod
-kubectl describe pod shared-pod
+## Tipos más comunes
 
-# Comprobar el contenido compartido desde el segundo contenedor
-kubectl exec -it shared-pod -c reader -- cat /data/index.html
+| Tipo | Origen de los datos | ¿Cuánto viven? | Uso típico |
+|---|---|---|---|
+| `emptyDir` | Directorio vacío en el nodo | Mientras exista el **Pod** (sobrevive a reinicios del contenedor) | Caché, archivos temporales compartidos |
+| `hostPath` | Directorio del **nodo** | Lo que viva el nodo | Solo agentes del sistema (DaemonSets de logs) |
+| `configMap` / `secret` | Un [[ConfigMap]] o [[Secret]] | Lo que viva el objeto | Archivos de configuración, certificados |
+| `projected` | Varias fuentes en un mismo directorio (Secret + ConfigMap + token de SA + downwardAPI) | Lo que vivan las fuentes | Montar todo junto en `/etc/app` |
+| `persistentVolumeClaim` | Almacenamiento real vía [[PersistentVolumeClaim]] | **Independiente del Pod** | Bases de datos, archivos subidos |
+
+```mermaid
+flowchart LR
+  subgraph POD[Pod]
+    C1[Contenedor app] -->|/data| V[(volume)]
+    C2[Contenedor sidecar] -->|/logs| V
+  end
+  V -.emptyDir.-> N[Disco del nodo<br/>muere con el Pod]
+  V -.PVC.-> D[Disco persistente<br/>sobrevive al Pod]
 ```
 
-**Definición declarativa en YAML (`emptydir-pod.yaml`):**
+## Errores comunes
+
+> [!warning] `emptyDir` no es persistente
+> Se borra junto con el Pod. Si el Pod se reprograma en otro nodo, los datos se pierden. Para datos que deben sobrevivir usa un [[PersistentVolumeClaim]].
+
+> [!danger] Evita `hostPath` en producción
+> Expone el sistema de archivos del nodo al contenedor (riesgo de seguridad) y ata el Pod a un nodo concreto. Resérvalo para agentes del sistema desplegados como DaemonSet.
+
+---
+
+## Ejemplo: dos contenedores comparten un `emptyDir`
+
+### YAML
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -56,27 +74,33 @@ spec:
       emptyDir: {}
   containers:
     - name: writer
-      image: busybox
+      image: busybox:1.37
       command: ["sh", "-c", "echo 'hola desde writer' > /data/index.html && sleep 3600"]
       volumeMounts:
         - name: shared-data
           mountPath: /data
     - name: reader
-      image: busybox
+      image: busybox:1.37
       command: ["sh", "-c", "sleep 3600"]
       volumeMounts:
         - name: shared-data
           mountPath: /data
 ```
 
-### Relacionado
-- [[Workloads#Pod|Pod]]
-- [[PersistentVolume]]
-- [[PersistentVolumeClaim]]
-- [[StorageClass]]
-- [[CSI Driver]]
-- [[ConfigMap]]
-- [[Secret]]
+### Comprobarlo
+
+```bash
+# Ver volúmenes declarados y montados
+kubectl describe pod shared-pod
+
+# Leer desde "reader" lo que escribió "writer"
+kubectl exec -it shared-pod -c reader -- cat /data/index.html
+```
+
+---
+
+## Relacionado
+[[Workloads#Pod|Pod]] · [[PersistentVolume]] · [[PersistentVolumeClaim]] · [[StorageClass]] · [[CSI Driver]] · [[ConfigMap]] · [[Secret]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

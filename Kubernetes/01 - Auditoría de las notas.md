@@ -219,3 +219,25 @@ flowchart LR
 
 > [!tip] Nada se ha borrado
 > Toda la información correcta de las notas originales se conserva. Los capítulos numerados **amplían** y **ordenan**; las notas por concepto siguen siendo la referencia rápida.
+
+---
+
+## 🧹 Segunda pasada: legibilidad (2026-10-09)
+
+> [!warning] Problema que quedaba tras la primera auditoría
+> Las correcciones se habían añadido como callouts `Corrección (auditoría 2026-10)` **debajo del texto erróneo**, que seguía en la nota. Leyendo de arriba abajo, primero aprendías el error y luego su corrección. Además, varios ejemplos seguían usando `nginx:latest` aunque esta auditoría decía lo contrario.
+
+| Cambio | Notas afectadas |
+|---|---|
+| Correcciones **integradas en el texto**; eliminado el texto erróneo y los callouts de "Corrección" | [[Workloads]], [[Networking]], [[Secret]] |
+| Callout **"En 30 segundos"** al inicio (qué es + analogía + lo que hay que recordar) | Las 18 notas por concepto |
+| Jerarquía de títulos corregida (`#` → `##` → `###`; antes saltaba de `#` a `###`) | 16 notas de concepto |
+| Listas largas convertidas en **tablas comparativas** (tipos de Service, puertos, modos de kube-proxy, CNIs, accessModes, reclaimPolicy, workloads…) | Todas |
+| **Diagramas Mermaid** nuevos (17): flujo de `kubectl apply`, reconciliación, ciclo de vida del PV, rollout fallido, camino de una petición, roles de Gateway API… | Todas salvo ConfigMap, Secret y StorageClass |
+| Imágenes con **versión fija** (`nginx:1.28`, `busybox:1.37`, `httpd:2.4`) | Todas |
+| [[PersistentVolumeClaim]]: "los PVC del StatefulSet no se borran" → es el valor **por defecto**, configurable desde 1.32 | PVC |
+| [[Helm]]: ejemplo con `ingress-nginx` (retirado) → `cert-manager`; mención de Helm 4 | Helm |
+| [[Cloud Controller Manager]]: el balanceador no siempre tiene IP pública | CCM |
+| [[Custom Resource Definition]]: enlace de estudio apuntaba a Seguridad → Fundamentos | CRD |
+
+Los títulos `##` de [[Workloads]] y [[Networking]] se mantienen idénticos para no romper los ~190 enlaces `[[Workloads#…]]` y `[[Networking#…]]` del vault. Las versiones anteriores están en `_respaldo-2026-10-09/` (extensión `.bak`, Obsidian no las indexa).

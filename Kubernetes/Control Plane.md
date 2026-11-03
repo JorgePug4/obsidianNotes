@@ -16,26 +16,64 @@ aliases:
 
 # Control Plane
 
-### Qué es
-El **Control Plane** (plano de control, antes llamado *master node*) es el conjunto de componentes que **toman las decisiones globales del clúster**: guardan el estado deseado, deciden en qué nodo corre cada [[Workloads#Pod|Pod]] y reaccionan a los cambios. Los contenedores de las aplicaciones corren en los [[Worker Node]]s.
+> [!abstract] En 30 segundos
+> - **Qué es:** el "cerebro" del clúster. Guarda el estado deseado, decide dónde corre cada [[Workloads#Pod|Pod]] y reacciona a los cambios.
+> - **Analogía:** la torre de control de un aeropuerto. No vuela aviones (no ejecuta tus contenedores), pero decide quién despega, por qué pista y qué hacer si algo falla.
+> - **Recuerda:** todo pasa por el **API Server**, y todo el estado vive en **etcd**. Si pierdes etcd sin backup, pierdes el clúster.
 
-### Para qué sirve
-Mantiene el clúster en el **estado deseado** declarado por el usuario. Sus componentes son:
-1. **kube-apiserver**: la puerta de entrada de todo el clúster. Expone la API REST de Kubernetes, autentica y autoriza las peticiones (de `kubectl`, del [[kubelet]], de los controladores) y es el **único** componente que habla directamente con etcd.
-2. **etcd**: base de datos clave-valor distribuida y consistente donde se guarda todo el estado del clúster. Si se pierde etcd sin respaldo, se pierde el clúster.
-3. **kube-scheduler**: observa los Pods sin nodo asignado y elige el nodo adecuado según recursos disponibles, afinidades, *taints/tolerations* y restricciones.
-4. **[[Kube-controller-manager]]**: ejecuta los bucles de control que llevan el estado actual hacia el deseado (réplicas, nodos, endpoints, jobs...).
-5. **[[Cloud Controller Manager]]** (opcional): integra el clúster con la API del proveedor de nube.
+---
 
-> [!tip] Flujo de un `kubectl apply`
-> `kubectl` → **kube-apiserver** (valida y guarda en **etcd**) → el **controller-manager** crea el [[Workloads#ReplicaSet|ReplicaSet]] y los Pods → el **scheduler** asigna cada Pod a un nodo → el [[kubelet]] del nodo pide al [[Container Runtime]] que arranque los contenedores.
+## Qué es
+
+El **Control Plane** (plano de control; antes se le llamaba *master node*) es el conjunto de componentes que **toman las decisiones globales del clúster**. Los contenedores de tus aplicaciones **no** corren aquí: corren en los [[Worker Node]]s.
+
+## Componentes
+
+| Componente | Qué hace | Si falla… |
+|---|---|---|
+| **kube-apiserver** | Puerta de entrada de todo el clúster. Expone la API REST, autentica y autoriza peticiones (de `kubectl`, del [[kubelet]], de los controladores). Es el **único** que habla con etcd | Nadie puede leer ni cambiar nada. Los Pods existentes siguen corriendo |
+| **etcd** | Base de datos clave-valor distribuida y consistente con **todo** el estado del clúster | Sin quórum, el clúster queda en solo lectura o caído. Sin backup = clúster perdido |
+| **kube-scheduler** | Observa Pods sin nodo asignado y elige el mejor nodo según recursos, afinidades, *taints/tolerations* y restricciones | Los Pods nuevos se quedan en `Pending` |
+| **[[Kube-controller-manager]]** | Ejecuta los bucles de control que llevan el estado actual hacia el deseado (réplicas, nodos, endpoints, jobs…) | No se recrean Pods caídos ni avanzan los rollouts |
+| **[[Cloud Controller Manager]]** *(opcional)* | Integra el clúster con la API del proveedor de nube (balanceadores, nodos, rutas) | Los Services `LoadBalancer` se quedan en `<pending>` |
+
+## Cómo funciona: qué pasa con un `kubectl apply`
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant U as kubectl
+  participant API as kube-apiserver
+  participant E as etcd
+  participant CM as controller-manager
+  participant S as scheduler
+  participant K as kubelet (nodo)
+  U->>API: apply Deployment
+  API->>API: autentica, autoriza, valida
+  API->>E: guarda el Deployment
+  CM->>API: detecta Deployment nuevo
+  CM->>API: crea ReplicaSet y luego Pods (sin nodo)
+  S->>API: detecta Pods sin nodo
+  S->>API: asigna nodo a cada Pod
+  K->>API: detecta Pod asignado a su nodo
+  K->>K: pide al runtime arrancar contenedores
+  K->>API: reporta estado Running/Ready
+```
+
+> [!tip] La idea clave
+> Ningún componente "llama" a otro directamente. Todos **observan** (*watch*) el API Server y reaccionan a lo que cambia. Por eso Kubernetes es tan tolerante a fallos: si un componente se reinicia, retoma el trabajo leyendo el estado actual.
+
+## Lo que debes saber para producción
 
 > [!warning] Alta disponibilidad
-> En producción el Control Plane debe ser redundante: al menos **3 nodos** de control (o de etcd) para mantener el quórum. En servicios gestionados (EKS, GKE, AKS) el proveedor administra el Control Plane por ti.
+> En producción el Control Plane debe ser redundante: al menos **3 nodos** de control (o de etcd) para mantener el quórum. En servicios gestionados (EKS, GKE, AKS) el proveedor administra el Control Plane por ti y tú no ves estos Pods.
 
-### Ejemplo
+---
 
-**Comandos útiles:**
+## Ejemplo
+
+### Comandos útiles
+
 ```bash
 # Ver la dirección del API Server y servicios principales
 kubectl cluster-info
@@ -43,13 +81,16 @@ kubectl cluster-info
 # Listar los nodos y sus roles (control-plane / worker)
 kubectl get nodes -o wide
 
-# Ver los componentes del Control Plane (en clústeres kubeadm/minikube corren como static Pods)
+# Ver los componentes del Control Plane (en kubeadm/minikube corren como static Pods)
 kubectl get pods -n kube-system
 
 # Comprobar la salud del API Server
 kubectl get --raw='/readyz?verbose'
+```
 
-# Respaldar etcd (ejecutado en un nodo del Control Plane)
+### Backup de etcd (en un nodo del Control Plane)
+
+```bash
 ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot.db \
   --endpoints=https://127.0.0.1:2379 \
   --cacert=/etc/kubernetes/pki/etcd/ca.crt \
@@ -57,19 +98,17 @@ ETCDCTL_API=3 etcdctl snapshot save /backup/etcd-snapshot.db \
   --key=/etc/kubernetes/pki/etcd/server.key
 ```
 
-**Ubicación de los manifiestos del Control Plane (clústeres creados con kubeadm):**
+### Dónde viven los manifiestos (clústeres kubeadm)
+
 ```bash
 ls /etc/kubernetes/manifests/
 # etcd.yaml  kube-apiserver.yaml  kube-controller-manager.yaml  kube-scheduler.yaml
 ```
 
-### Relacionado
-- [[Worker Node]]
-- [[Kube-controller-manager]]
-- [[Cloud Controller Manager]]
-- [[kubelet]]
-- [[Networking#Kube-proxy|Kube-proxy]]
-- [[Custom Controller]]
+---
+
+## Relacionado
+[[Worker Node]] · [[Kube-controller-manager]] · [[Cloud Controller Manager]] · [[kubelet]] · [[Networking#Kube-proxy|Kube-proxy]] · [[Custom Controller]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

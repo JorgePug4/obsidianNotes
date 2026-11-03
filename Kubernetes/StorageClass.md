@@ -13,40 +13,46 @@ aliases:
 
 # StorageClass
 
-### Qué es
-Una **StorageClass** (abreviado `sc`) es un recurso de ámbito de clúster que describe una **"clase" o perfil de almacenamiento** disponible: qué aprovisionador (*provisioner*, normalmente un [[CSI Driver]]) lo crea y con qué parámetros (tipo de disco, rendimiento, replicación, cifrado, etc.).
+> [!abstract] En 30 segundos
+> - **Qué es:** un **perfil de almacenamiento** ("SSD rápido cifrado", "HDD barato") que permite crear discos automáticamente.
+> - **Analogía:** el menú de un restaurante. El [[PersistentVolumeClaim|PVC]] pide un plato del menú; la cocina ([[CSI Driver]]) lo prepara.
+> - **Recuerda:** el `reclaimPolicy` por defecto es **`Delete`**: borrar el PVC **destruye el disco**.
 
-### Para qué sirve
-Habilita el **aprovisionamiento dinámico**: en lugar de que un administrador cree cada [[PersistentVolume]] a mano, cuando un [[PersistentVolumeClaim]] pide una StorageClass, el aprovisionador crea el disco y el PV automáticamente.
+---
 
-Campos clave:
-- **`provisioner`**: el driver que crea los volúmenes (ej. `ebs.csi.aws.com`, `pd.csi.storage.gke.io`, `disk.csi.azure.com`, `k8s.io/minikube-hostpath`).
-- **`parameters`**: opciones específicas del proveedor (ej. `type: gp3`).
-- **`reclaimPolicy`**: `Delete` (por defecto) o `Retain` para los PV que cree.
-- **`volumeBindingMode`**: `Immediate` crea el volumen en cuanto aparece el PVC. `WaitForFirstConsumer` espera a que un Pod lo use para crearlo en la zona/nodo correcto.
-- **`allowVolumeExpansion`**: permite ampliar PVC existentes.
+## Qué es
+
+Una **StorageClass** (`sc`) es un recurso de ámbito de clúster que describe una clase de almacenamiento: **qué aprovisionador** la crea (normalmente un [[CSI Driver]]) y **con qué parámetros** (tipo de disco, rendimiento, replicación, cifrado…).
+
+## Para qué sirve
+
+Habilita el **aprovisionamiento dinámico**: nadie crea [[PersistentVolume|PVs]] a mano. Cuando un PVC pide una StorageClass, el aprovisionador crea el disco y el PV.
+
+## Campos clave
+
+| Campo | Qué controla | Valores / ejemplo |
+|---|---|---|
+| `provisioner` | Qué driver crea los volúmenes | `ebs.csi.aws.com`, `pd.csi.storage.gke.io`, `disk.csi.azure.com`, `k8s.io/minikube-hostpath` |
+| `parameters` | Opciones del proveedor | `type: gp3`, `encrypted: "true"` |
+| `reclaimPolicy` | Qué pasa con el disco al borrar el PVC | `Delete` *(por defecto)* · `Retain` |
+| `volumeBindingMode` | Cuándo se crea el disco | `Immediate` · `WaitForFirstConsumer` |
+| `allowVolumeExpansion` | Si se pueden ampliar PVCs existentes | `true` / `false` |
+
+> [!tip] Usa `WaitForFirstConsumer` en la nube
+> Con `Immediate` el disco se crea en cualquier zona en cuanto aparece el PVC… y el Pod puede acabar programado en **otra zona**, donde no puede montarlo. `WaitForFirstConsumer` espera a saber en qué nodo va el Pod y crea el disco ahí.
 
 > [!tip] StorageClass por defecto
-> Si un PVC no especifica `storageClassName`, se usa la StorageClass marcada con la anotación `storageclass.kubernetes.io/is-default-class: "true"`. Si quieres forzar un PV estático sin clase, usa `storageClassName: ""`.
+> Si un PVC no indica `storageClassName`, se usa la clase con la anotación `storageclass.kubernetes.io/is-default-class: "true"`. Para forzar un PV estático **sin** clase: `storageClassName: ""`.
 
-> [!warning] `reclaimPolicy: Delete` borra el disco
-> Con la política por defecto (`Delete`), eliminar el PVC destruye también el disco en el proveedor. Para bases de datos productivas considera `Retain`.
+> [!danger] `reclaimPolicy: Delete` borra el disco
+> Con el valor por defecto, eliminar el PVC destruye también el disco en el proveedor. Para bases de datos productivas usa una clase con `Retain` y backups (VolumeSnapshots, Velero).
 
-### Ejemplo
+---
 
-**Comandos útiles:**
-```bash
-# Listar las StorageClasses y ver cuál es la predeterminada
-kubectl get storageclass
+## Ejemplo (AWS EBS)
 
-# Inspeccionar el aprovisionador y los parámetros
-kubectl describe sc fast-ssd
+### YAML
 
-# Marcar una StorageClass como predeterminada
-kubectl patch storageclass fast-ssd -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
-```
-
-**Definición declarativa en YAML (`storageclass.yaml`) — ejemplo en AWS EBS:**
 ```yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
@@ -56,17 +62,28 @@ provisioner: ebs.csi.aws.com
 parameters:
   type: gp3
   encrypted: "true"
-reclaimPolicy: Retain
-volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain                       # no borrar el disco con el PVC
+volumeBindingMode: WaitForFirstConsumer     # crear el disco en la zona del Pod
 allowVolumeExpansion: true
 ```
 
-### Relacionado
-- [[PersistentVolume]]
-- [[PersistentVolumeClaim]]
-- [[CSI Driver]]
-- [[Volume]]
-- [[Workloads#StatefulSet|StatefulSet]]
+### Comandos
+
+```bash
+# Ver las clases y cuál es la predeterminada (default)
+kubectl get storageclass
+
+# Ver aprovisionador y parámetros
+kubectl describe sc fast-ssd
+
+# Marcar una clase como predeterminada
+kubectl patch storageclass fast-ssd -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
+---
+
+## Relacionado
+[[PersistentVolume]] · [[PersistentVolumeClaim]] · [[CSI Driver]] · [[Volume]] · [[Workloads#StatefulSet|StatefulSet]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

@@ -12,59 +12,90 @@ aliases:
 
 # CSI Driver
 
-### Qué es
-Un **CSI Driver** es un plugin que implementa la **Container Storage Interface (CSI)**, un estándar abierto que define cómo un orquestador de contenedores (como Kubernetes) se comunica con un sistema de almacenamiento. Es el equivalente, para el almacenamiento, de lo que el [[Networking#CNI|CNI]] es para la red.
+> [!abstract] En 30 segundos
+> - **Qué es:** un plugin que conecta Kubernetes con un sistema de almacenamiento concreto (EBS, Azure Disk, Ceph, NFS…).
+> - **Analogía:** el driver de una impresora. El sistema operativo sabe "imprimir"; el driver sabe hablar con *esa* impresora.
+> - **Recuerda:** **CSI es al almacenamiento lo que [[Networking#CNI|CNI]] es a la red.**
 
-### Para qué sirve
-Permite que cualquier proveedor de almacenamiento (AWS EBS, GCE PD, Azure Disk, Ceph, NetApp, Longhorn, NFS, etc.) se integre con Kubernetes **sin modificar el código fuente de Kubernetes**. Antes de CSI, los drivers vivían dentro del código de Kubernetes (*in-tree*). Hoy se instalan por separado (*out-of-tree*) y los antiguos drivers in-tree se migraron a CSI.
+---
 
-Un driver CSI suele desplegarse en dos partes:
-1. **Controller plugin** (normalmente un Deployment): crea, borra, amplía y toma snapshots de volúmenes en el backend. Se apoya en *sidecars* como `external-provisioner` y `external-attacher`.
-2. **Node plugin** (un DaemonSet en cada [[Worker Node]]): monta y desmonta el volumen en el nodo para que el [[kubelet]] lo entregue al [[Workloads#Pod|Pod]].
+## Qué es
 
-El driver se referencia desde el campo `provisioner` de una [[StorageClass]].
+Un **CSI Driver** implementa la **Container Storage Interface**, un estándar abierto que define cómo un orquestador habla con un sistema de almacenamiento.
+
+## Para qué sirve
+
+Permite integrar **cualquier** proveedor de almacenamiento **sin modificar Kubernetes**.
+
+| Antes (*in-tree*) | Ahora (*out-of-tree*, CSI) |
+|---|---|
+| Los drivers vivían dentro del código de Kubernetes | Se instalan por separado (Helm, add-on del proveedor) |
+| Un bug de un proveedor obligaba a esperar una versión de Kubernetes | Cada proveedor publica a su ritmo |
+| — | Los antiguos drivers in-tree **se migraron** a CSI |
+
+## Cómo se despliega
+
+```mermaid
+flowchart LR
+  SC[StorageClass<br/>provisioner: ebs.csi.aws.com] --> CTRL
+  subgraph CTRL[Controller plugin · Deployment]
+    EP[external-provisioner] --- EA[external-attacher]
+  end
+  CTRL -->|crea / borra / amplía / snapshot| BE[(Backend<br/>EBS, Azure Disk…)]
+  subgraph NODO[Node plugin · DaemonSet en cada nodo]
+    NP[monta / desmonta]
+  end
+  BE --> NP --> KL[kubelet] --> POD[Pod]
+```
+
+| Parte | Cómo se despliega | Qué hace |
+|---|---|---|
+| **Controller plugin** | Normalmente un Deployment | Crea, borra, amplía y toma snapshots de volúmenes en el backend. Usa *sidecars* como `external-provisioner` y `external-attacher` |
+| **Node plugin** | DaemonSet en cada [[Worker Node]] | Monta y desmonta el volumen en el nodo para que el [[kubelet]] lo entregue al [[Workloads#Pod\|Pod]] |
+
+El driver se referencia en el campo `provisioner` de una [[StorageClass]].
 
 > [!tip] Snapshots de volúmenes
-> Muchos drivers CSI soportan `VolumeSnapshot`, que permite crear copias puntuales de un [[PersistentVolumeClaim]] y restaurarlas en un PVC nuevo. Requiere los CRDs y el controlador de snapshots instalados.
+> Muchos drivers soportan `VolumeSnapshot`: copias puntuales de un [[PersistentVolumeClaim]] que se pueden restaurar en un PVC nuevo. Requiere los CRDs y el controlador de snapshots instalados.
 
-### Ejemplo
+---
 
-**Comandos útiles:**
+## Ejemplo (AWS EBS)
+
+### Comandos
+
 ```bash
-# Listar los drivers CSI registrados en el clúster
+# Drivers CSI registrados en el clúster
 kubectl get csidrivers
 
-# Ver qué drivers CSI están disponibles en cada nodo
+# Drivers disponibles en cada nodo
 kubectl get csinodes
 
-# Ver los Pods del driver (ejemplo con el driver de AWS EBS)
+# Pods del driver
 kubectl get pods -n kube-system -l app.kubernetes.io/name=aws-ebs-csi-driver
 
-# Instalar el driver CSI de AWS EBS con Helm
+# Instalar el driver con Helm
 helm repo add aws-ebs-csi-driver https://kubernetes-sigs.github.io/aws-ebs-csi-driver
 helm install aws-ebs-csi-driver aws-ebs-csi-driver/aws-ebs-csi-driver -n kube-system
 ```
 
-**Uso del driver desde una StorageClass (`storageclass.yaml`):**
+### Usarlo desde una StorageClass
+
 ```yaml
 apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: ebs-gp3
-provisioner: ebs.csi.aws.com
+provisioner: ebs.csi.aws.com      # ← aquí se elige el driver
 parameters:
   type: gp3
 volumeBindingMode: WaitForFirstConsumer
 ```
 
-### Relacionado
-- [[StorageClass]]
-- [[PersistentVolume]]
-- [[PersistentVolumeClaim]]
-- [[Volume]]
-- [[kubelet]]
-- [[Networking#CNI|CNI]]
-- [[Helm]]
+---
+
+## Relacionado
+[[StorageClass]] · [[PersistentVolume]] · [[PersistentVolumeClaim]] · [[Volume]] · [[kubelet]] · [[Networking#CNI|CNI]] · [[Helm]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[05 - Configuración y almacenamiento]] · Índice: [[00 - Kubernetes - Índice]]

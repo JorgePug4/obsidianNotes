@@ -15,54 +15,74 @@ aliases:
 
 # Container Runtime
 
-### Qué es
-El **Container Runtime** (entorno de ejecución de contenedores) es el software de cada nodo que **descarga imágenes y ejecuta los contenedores**. Kubernetes se comunica con él a través de la **CRI** (*Container Runtime Interface*), una API estándar que permite usar distintos runtimes sin cambiar Kubernetes.
+> [!abstract] En 30 segundos
+> - **Qué es:** el software de cada nodo que **descarga imágenes y ejecuta contenedores**.
+> - **Analogía:** el motor de un coche. El [[kubelet]] es el conductor: decide qué hacer, pero quien mueve las ruedas es el runtime.
+> - **Recuerda:** hoy el runtime es **containerd** o **CRI-O**, no Docker. Tus imágenes hechas con Docker siguen funcionando igual.
 
-### Para qué sirve
+---
+
+## Qué es
+
+El **Container Runtime** (entorno de ejecución de contenedores) es el componente que crea y gestiona los contenedores en el nodo. Kubernetes habla con él a través de la **CRI** (*Container Runtime Interface*), una API estándar que permite cambiar de runtime sin tocar Kubernetes.
+
+## Cómo funciona
+
 Cuando el [[kubelet]] recibe un [[Workloads#Pod|Pod]], le pide al runtime (vía CRI) que:
-1. Descargue (*pull*) las imágenes de los contenedores.
-2. Cree el *sandbox* del Pod (espacios de nombres de red, IPC, etc.) y los contenedores.
+1. Descargue (*pull*) las imágenes.
+2. Cree el *sandbox* del Pod (namespaces de red, IPC…) y los contenedores.
 3. Los arranque, detenga, elimine y reporte su estado y logs.
 
-Hay dos niveles:
-- **Runtime de alto nivel (compatible con CRI)**: `containerd` (el más usado, por defecto en EKS, GKE, AKS y kubeadm) y `CRI-O` (por defecto en OpenShift).
-- **Runtime de bajo nivel (OCI)**: `runc` (o alternativas como `crun`, `gVisor`, `Kata Containers`), que crea el proceso aislado usando *namespaces* y *cgroups* del kernel de Linux.
+### Dos niveles de runtime
+
+```mermaid
+flowchart LR
+  KL[kubelet] -->|CRI| HL["Alto nivel (CRI)<br/>containerd · CRI-O"]
+  HL -->|OCI| LL["Bajo nivel (OCI)<br/>runc · crun · gVisor · Kata"]
+  LL --> K[Kernel Linux<br/>namespaces + cgroups]
+```
+
+| Nivel | Ejemplos | Qué hace |
+|---|---|---|
+| **Alto nivel (CRI)** | `containerd` (por defecto en EKS, GKE, AKS y kubeadm), `CRI-O` (por defecto en OpenShift) | Gestiona imágenes, ciclo de vida y habla con el kubelet |
+| **Bajo nivel (OCI)** | `runc`, `crun`, `gVisor`, `Kata Containers` | Crea el proceso aislado usando *namespaces* y *cgroups* del kernel |
+
+## Lo que confunde a todo el mundo
 
 > [!warning] Docker Engine ya no es el runtime de Kubernetes
-> Desde **Kubernetes 1.24** se eliminó el `dockershim`, así que Docker Engine no se usa directamente como runtime. **Las imágenes creadas con Docker siguen funcionando**, porque cumplen el estándar OCI y containerd/CRI-O las ejecutan igual. Si necesitas Docker Engine como runtime existe el adaptador externo `cri-dockerd`.
+> Desde **Kubernetes 1.24** se eliminó el `dockershim`, así que Docker Engine no se usa directamente como runtime.
+> - **Las imágenes creadas con Docker siguen funcionando**: cumplen el estándar OCI y containerd/CRI-O las ejecutan igual.
+> - Si de verdad necesitas Docker Engine como runtime, existe el adaptador externo `cri-dockerd`.
 
 > [!tip] `crictl` en lugar de `docker`
 > Para depurar contenedores directamente en un nodo usa `crictl`, que habla CRI con cualquier runtime compatible.
 
-### Ejemplo
+---
 
-**Comandos útiles:**
+## Ejemplo
+
+### Comandos útiles
+
 ```bash
 # Ver qué runtime y versión usa cada nodo (columna CONTAINER-RUNTIME)
 kubectl get nodes -o wide
 
 # --- En el nodo ---
-# Listar contenedores y Pods gestionados por el runtime
-sudo crictl ps
-sudo crictl pods
-
-# Listar imágenes descargadas en el nodo
-sudo crictl images
-
-# Ver los logs de un contenedor desde el nodo
+sudo crictl ps                 # contenedores
+sudo crictl pods               # Pods (sandboxes)
+sudo crictl images             # imágenes descargadas
 sudo crictl logs <container-id>
-
-# Estado del servicio containerd
 systemctl status containerd
 ```
 
-**Elegir un runtime alternativo con `RuntimeClass` (ej. gVisor para mayor aislamiento):**
+### Usar un runtime alternativo con `RuntimeClass` (gVisor para más aislamiento)
+
 ```yaml
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
   name: gvisor
-handler: runsc
+handler: runsc            # nombre del handler configurado en containerd
 ---
 apiVersion: v1
 kind: Pod
@@ -72,14 +92,13 @@ spec:
   runtimeClassName: gvisor
   containers:
     - name: app
-      image: nginx:latest
+      image: nginx:1.28
 ```
 
-### Relacionado
-- [[kubelet]]
-- [[Worker Node]]
-- [[Workloads#Pod|Pod]]
-- [[Networking#CNI|CNI]]
+---
+
+## Relacionado
+[[kubelet]] · [[Worker Node]] · [[Workloads#Pod|Pod]] · [[Networking#CNI|CNI]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[02 - Fundamentos y arquitectura]] · Índice: [[00 - Kubernetes - Índice]]

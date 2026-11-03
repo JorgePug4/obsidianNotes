@@ -13,29 +13,59 @@ aliases:
 
 # Worker Node
 
-### Qué es
-Un **Worker Node** (nodo de trabajo) es una máquina, física o virtual, que forma parte del clúster y **ejecuta los [[Workloads#Pod|Pod]]s de las aplicaciones**. Es gestionado por el [[Control Plane]].
+> [!abstract] En 30 segundos
+> - **Qué es:** una máquina (física o virtual) del clúster donde **realmente corren tus [[Workloads#Pod|Pods]]**.
+> - **Analogía:** si el [[Control Plane]] es la torre de control, los Worker Nodes son los aviones: hacen el trabajo y obedecen instrucciones.
+> - **Recuerda:** cada nodo lleva tres piezas fijas: **kubelet**, **kube-proxy** y **container runtime**.
 
-### Para qué sirve
-Aporta la capacidad de cómputo (CPU, memoria, almacenamiento, red) donde realmente corren los contenedores. Cada Worker Node ejecuta tres componentes:
-1. **[[kubelet]]**: agente que recibe del API Server los Pods asignados al nodo y se asegura de que sus contenedores estén corriendo y sanos.
-2. **[[Networking#Kube-proxy|Kube-proxy]]**: mantiene las reglas de red (iptables/IPVS) que implementan los [[Networking#Kubernetes Service|Kubernetes Service]].
-3. **[[Container Runtime]]**: software que descarga imágenes y ejecuta los contenedores (containerd, CRI-O).
+---
 
-Además, en cada nodo corren el plugin [[Networking#CNI|CNI]] (red de Pods) y, si aplica, el plugin de nodo del [[CSI Driver]] (almacenamiento).
+## Qué es
 
-> [!tip] Mantenimiento de un nodo: `cordon` y `drain`
-> Antes de actualizar o apagar un nodo:
-> - `kubectl cordon <nodo>`: lo marca como *unschedulable* (no recibe Pods nuevos).
-> - `kubectl drain <nodo> --ignore-daemonsets --delete-emptydir-data`: desaloja los Pods de forma ordenada para que se reprogramen en otros nodos.
-> - `kubectl uncordon <nodo>`: lo vuelve a habilitar.
+Un **Worker Node** (nodo de trabajo) aporta la capacidad de cómputo (CPU, memoria, disco, red) del clúster. Lo gestiona el [[Control Plane]]: el scheduler decide qué Pods le tocan y el nodo se encarga de ejecutarlos.
+
+## Componentes de cada nodo
+
+```mermaid
+flowchart TB
+  API[kube-apiserver] <-->|PodSpecs / estado| KL
+  subgraph NODO[Worker Node]
+    KL[kubelet] -->|CRI| CR[Container Runtime<br/>containerd / CRI-O]
+    KL -->|CNI| CNI[Plugin CNI<br/>red del Pod]
+    KL -->|CSI| CSI[Plugin CSI<br/>discos]
+    KP[kube-proxy<br/>reglas de Services]
+    CR --> P1[Pod] & P2[Pod]
+  end
+```
+
+| Componente | Función |
+|---|---|
+| **[[kubelet]]** | Agente que recibe del API Server los Pods asignados al nodo y se asegura de que sus contenedores estén corriendo y sanos |
+| **[[Networking#Kube-proxy\|Kube-proxy]]** | Programa reglas en el kernel (iptables, IPVS o nftables) que implementan los [[Networking#Kubernetes Service\|Services]]. Algunos CNIs con eBPF (Cilium) lo sustituyen |
+| **[[Container Runtime]]** | Descarga imágenes y ejecuta contenedores (containerd, CRI-O) |
+| **Plugin [[Networking#CNI\|CNI]]** | Da IP y red a cada Pod |
+| **Plugin de nodo [[CSI Driver\|CSI]]** *(si aplica)* | Monta los volúmenes persistentes en el nodo |
+
+## Mantenimiento de un nodo
+
+Antes de actualizar o apagar un nodo, sigue siempre este orden:
+
+| Paso | Comando | Efecto |
+|---|---|---|
+| 1 | `kubectl cordon <nodo>` | Lo marca *unschedulable*: no recibe Pods nuevos |
+| 2 | `kubectl drain <nodo> --ignore-daemonsets --delete-emptydir-data` | Desaloja los Pods de forma ordenada (respeta los PodDisruptionBudgets) |
+| 3 | *(mantenimiento)* | Actualizar, reiniciar, etc. |
+| 4 | `kubectl uncordon <nodo>` | Lo vuelve a habilitar |
 
 > [!warning] Nodo en estado `NotReady`
-> Si el [[kubelet]] deja de reportar al API Server, el nodo pasa a `NotReady` y, tras un tiempo, sus Pods se desalojan y se recrean en otros nodos (solo si están gestionados por un [[Workloads#Deployment|Deployment]], [[Workloads#StatefulSet|StatefulSet]], etc.). Los Pods sueltos no se recrean.
+> Si el [[kubelet]] deja de reportar al API Server, el nodo pasa a `NotReady` y, tras un tiempo de tolerancia (≈5 min por defecto), sus Pods se desalojan y se recrean en otros nodos. **Solo** se recrean si los gestiona un controlador ([[Workloads#Deployment|Deployment]], [[Workloads#StatefulSet|StatefulSet]], etc.). Los Pods sueltos se pierden.
 
-### Ejemplo
+---
 
-**Comandos útiles:**
+## Ejemplo
+
+### Comandos útiles
+
 ```bash
 # Listar nodos con IP, versión del kubelet y runtime
 kubectl get nodes -o wide
@@ -46,19 +76,15 @@ kubectl describe node worker-1
 # Ver consumo de CPU/memoria por nodo (requiere metrics-server)
 kubectl top nodes
 
-# Agregar una etiqueta para programar Pods en nodos específicos
+# Etiquetar un nodo para dirigir Pods hacia él
 kubectl label node worker-1 disktype=ssd
 
 # Aplicar un taint para que solo ciertos Pods se programen en el nodo
 kubectl taint nodes worker-1 dedicated=gpu:NoSchedule
-
-# Mantenimiento
-kubectl cordon worker-1
-kubectl drain worker-1 --ignore-daemonsets --delete-emptydir-data
-kubectl uncordon worker-1
 ```
 
-**Programar un Pod en un nodo con una etiqueta concreta (`nodeSelector`):**
+### Programar un Pod en nodos con una etiqueta (`nodeSelector`)
+
 ```yaml
 apiVersion: v1
 kind: Pod
@@ -66,20 +92,16 @@ metadata:
   name: app-en-ssd
 spec:
   nodeSelector:
-    disktype: ssd
+    disktype: ssd          # solo nodos con esta etiqueta
   containers:
     - name: app
-      image: nginx:latest
+      image: nginx:1.28    # versión fija, nunca latest
 ```
 
-### Relacionado
-- [[Control Plane]]
-- [[kubelet]]
-- [[Container Runtime]]
-- [[Networking#Kube-proxy|Kube-proxy]]
-- [[Networking#CNI|CNI]]
-- [[Networking#NodePort|NodePort]]
-- [[Workloads#Pod|Pod]]
+---
+
+## Relacionado
+[[Control Plane]] · [[kubelet]] · [[Container Runtime]] · [[Networking#Kube-proxy|Kube-proxy]] · [[Networking#CNI|CNI]] · [[Networking#NodePort|NodePort]] · [[Workloads#Pod|Pod]]
 
 > [!info] 📚 Estudio guiado
 > Capítulo: [[02 - Fundamentos y arquitectura]] · [[06 - Scheduling y recursos]] · Índice: [[00 - Kubernetes - Índice]]
