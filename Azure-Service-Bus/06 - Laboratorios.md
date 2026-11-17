@@ -3,7 +3,7 @@ tags: [azure-service-bus, laboratorio, proyecto]
 ---
 # 06 - Laboratorios
 
-> Labs 01-10 y proyecto final
+> Labs 01-15 y proyecto final
 
 ## Contenido
 - [[#Lab 01 - Namespace y Queue]]
@@ -16,6 +16,11 @@ tags: [azure-service-bus, laboratorio, proyecto]
 - [[#Lab 08 - Retry]]
 - [[#Lab 09 - Sessions]]
 - [[#Lab 10 - Managed Identity]]
+- [[#Lab 11 - Observabilidad]]
+- [[#Lab 12 - Microservicios]]
+- [[#Lab 13 - Outbox con EF Core]]
+- [[#Lab 14 - Saga con compensacion]]
+- [[#Lab 15 - Proyecto final guiado]]
 - [[#Proyecto final]]
 
 ## Lab 01 - Namespace y Queue
@@ -410,6 +415,167 @@ az identity create -g $RG -n id-orders-worker
 
 ---
 
+## Lab 11 - Observabilidad
+*Lab 11 — Métricas, alertas y trazas distribuidas*
+
+### Objetivo
+Poder responder, sin mirar el código, a: "¿qué le pasó al pedido 42?" y "¿está sano el sistema ahora mismo?".
+
+### Prerrequisitos
+Workers de los Labs 04-05 desplegados en Azure (las métricas y Entra ID no existen en el emulador). Un recurso de Application Insights basado en workspace.
+
+### Parte A — Trazas
+1. Añade `Azure.Monitor.OpenTelemetry.AspNetCore` a la API y a los workers, activa `Azure.Experimental.EnableActivitySource` y `AddSource("Azure.Messaging.ServiceBus.*")` ([[09 - Produccion y operacion#Observabilidad con Application Insights|Observabilidad con Application Insights]]).
+2. Envía un pedido por `POST /orders` y busca la transacción en *Transaction search*. ¿Ves el envío, la recepción y el complete enlazados?
+3. Comprueba que `Diagnostic-Id` aparece en `ApplicationProperties` (Service Bus Explorer del portal → peek).
+
+### Parte B — Logs con contexto
+Añade el `BeginScope` con `MessageId`, `CorrelationId`, `DeliveryCount` y `AgeMs`. Provoca un fallo y encuéntralo con KQL filtrando por `MessageId`.
+
+### Parte C — Métricas y alertas
+| Alerta | Cómo probarla |
+|---|---|
+| `DeadletteredMessages > 0` | Envía un mensaje inválido |
+| `ActiveMessages` creciendo 15 min | Para el worker y envía 1 000 mensajes |
+| Edad del mensaje más viejo > 2 min (métrica propia con peek) | Igual que la anterior |
+| `ThrottledRequests > 0` | En Standard, un bucle de envío muy agresivo [puede no reproducirse según la carga del clúster compartido] |
+
+### Parte D — Dashboard
+Workbook o dashboard con: Incoming vs Outgoing, Active y DLQ por entidad, p95 del handler, ratio complete/abandon/deadletter.
+
+### Verificación
+- [ ] Encuentras un mensaje concreto de extremo a extremo en < 2 minutos.
+- [ ] Cada alerta llega al action group y enlaza con su runbook de [[10 - Troubleshooting|Troubleshooting]].
+- [ ] Sabes explicar por qué Incoming ≠ Outgoing no implica pérdida ([[09 - Produccion y operacion#Metricas clave|Metricas clave]]).
+
+---
+
+## Lab 12 - Microservicios
+*Lab 12 — Commands, events y competing consumers*
+
+### Objetivo
+Construir tres servicios que se comunican solo por Service Bus y medir el escalado horizontal.
+
+### Topología
+```bash
+az servicebus topic create -g $RG --namespace-name $NS -n order-events
+for s in billing shipping analytics; do
+  az servicebus topic subscription create -g $RG --namespace-name $NS --topic-name order-events -n $s
+done
+az servicebus queue create -g $RG --namespace-name $NS -n shipping-commands
+```
+
+### Pasos
+1. **Order API** publica `OrderPlaced` (evento) en `order-events`.
+2. **Billing** consume su subscription y, al cobrar, envía `ShipOrder` (comando) a `shipping-commands`.
+3. **Shipping** consume `shipping-commands`.
+4. **Analytics** solo cuenta eventos (subscription con correlation filter `Subject = 'OrderPlaced'`).
+5. Despliega Billing con 1, 2 y 4 réplicas (o KEDA en Container Apps) y mide el throughput con 5 000 pedidos.
+
+### Preguntas que debes responder en el informe
+- ¿Por qué `ShipOrder` es una queue y `OrderPlaced` un topic? ([[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]])
+- ¿Escaló linealmente Billing? Si no, ¿dónde estaba el cuello de botella?
+- ¿Qué pasa con Analytics si lo apagas 1 hora? ¿Y con los demás?
+
+### Verificación
+- [ ] Ningún servicio llama por HTTP a otro.
+- [ ] Puedes añadir un cuarto consumidor sin tocar Order API.
+
+---
+
+## Lab 13 - Outbox con EF Core
+*Lab 13 — Outbox transaccional + Inbox*
+
+### Objetivo
+Eliminar el dual write y demostrarlo con fallos inyectados.
+
+### Pasos
+1. Tabla `Outbox` y entidad `OutboxMessage` ([[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]]).
+2. `POST /orders` guarda `Order` + `OutboxMessage` en un único `SaveChangesAsync`.
+3. `OutboxRelay` como `BackgroundService` con `UPDLOCK, READPAST`, `MessageId = Outbox.Id`.
+4. Activa duplicate detection en `order-events` (ventana 10 min). Recuerda que es inmutable: si el topic ya existe sin DD, créalo de nuevo.
+5. En el consumidor de Billing, añade la tabla `ProcessedMessages` ([[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]]).
+
+### Fallos inyectados
+| Fallo | Cómo | Resultado esperado |
+|---|---|---|
+| Service Bus inaccesible 2 min | Regla de firewall o connection string inválida temporal | Los pedidos se aceptan; el outbox crece; al volver, se publican todos |
+| Relay muere tras `Send` y antes de `COMMIT` | `Environment.FailFast` con una flag | Se publica dos veces; DD descarta el duplicado |
+| Relay muere y vuelve 15 min después | Igual, esperando > ventana DD | Duplicado entregado; el inbox lo descarta |
+| Dos réplicas del relay | Escala a 2 | Ningún mensaje se publica dos veces por concurrencia (READPAST) |
+
+### Verificación
+- [ ] `SELECT COUNT(*) FROM Orders` = número de cobros únicos en Billing, en todos los escenarios.
+- [ ] Sabes explicar qué protege el outbox y qué protege el inbox.
+
+---
+
+## Lab 14 - Saga con compensacion
+*Lab 14 — Saga Order/Payment/Inventory*
+
+### Objetivo
+Implementar la misma saga dos veces (coreografía y orquestación) y comparar.
+
+### Parte A — Coreografía
+- Payment e Inventory reaccionan a `OrderPlaced`.
+- Order escucha `PaymentSucceeded/Failed` y `StockReserved/Rejected`.
+- Si llega `StockRejected` y el pago se hizo → Order envía `RefundPayment`.
+
+### Parte B — Orquestación con sesiones
+- Queue `order-saga` con `RequiresSession = true`, `SessionId = OrderId`.
+- Orquestador con `ServiceBusSessionProcessor`, estado en session state, timeout con mensaje programado a 15 min ([[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]]).
+- Envío de comandos + `SetSessionStateAsync` + complete en una transacción.
+
+### Escenarios
+1. Camino feliz.
+2. Pago rechazado (importe > 1 000).
+3. Sin stock.
+4. Payment caído 20 min → debe disparar el timeout y compensar.
+5. `RefundPayment` entregado dos veces → solo un reembolso.
+6. Mensajes del mismo pedido enviados en desorden (`StockReserved` antes que `OrderPlaced`).
+
+### Entregable
+Tabla comparativa: líneas de código, facilidad para responder "¿en qué estado está el pedido X?", comportamiento en el escenario 6, y tu recomendación justificada.
+
+---
+
+## Lab 15 - Proyecto final guiado
+*Lab 15 — De los labs al proyecto final*
+
+### Objetivo
+Integrar los Labs 01-14 en el [[06 - Laboratorios#Proyecto final|Proyecto final]] siguiendo un orden que permita detectar errores pronto.
+
+### Hitos (cada uno termina con algo demostrable)
+| # | Hito | Reutiliza | Criterio de salida |
+|---|---|---|---|
+| 1 | Infra en Bicep: namespace, topic, subscriptions con reglas, queues, identidades, roles, `disableLocalAuth` | Labs 01, 06, 10 | `az deployment` idempotente; ninguna connection string |
+| 2 | Order API + outbox | Lab 13 | Pedido creado con Service Bus caído |
+| 3 | Payment e Inventory idempotentes | Labs 04, 13 | Test con mensajes duplicados |
+| 4 | Saga | Lab 14 | Los 6 escenarios del Lab 14 |
+| 5 | Errores: DeadLetter con razón, backoff, circuit breaker | Labs 07, 08 | Retry storm controlada |
+| 6 | Observabilidad y alertas | Lab 11 | Traza de extremo a extremo |
+| 7 | Herramienta de reprocesado de DLQ | Lab 07 | Reprocesa por razón y con límite |
+| 8 | Pruebas de caos del proyecto final | — | Resultados documentados |
+| 9 | `ARCHITECTURE.md` con ADRs | Notas 08 y 09 | Cada decisión con alternativa descartada y motivo |
+
+### Plantilla de ADR
+```markdown
+# ADR-003: Orquestación de la saga con sesiones
+Estado: Aceptada · Fecha: …
+Contexto: …
+Decisión: …
+Alternativas consideradas: coreografía (descartada porque …)
+Consecuencias: + … / − …
+```
+
+### Autoevaluación antes de la demo
+- [ ] ¿Qué pasa si mato cualquier proceso en cualquier momento? (respuesta por componente)
+- [ ] ¿Dónde puede haber duplicados y qué los neutraliza?
+- [ ] ¿Qué alerta salta primero en cada prueba de caos?
+- [ ] ¿Cuánto cuesta al mes con 5 M mensajes/día en Standard y en Premium? ([[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]])
+
+---
+
 ## Proyecto final
 *Proyecto final — Sistema de pedidos con Service Bus*
 
@@ -444,13 +610,13 @@ graph TD
 | # | Requisito | Nota de referencia |
 |---|---|---|
 | 1 | Managed Identity / `DefaultAzureCredential`, cero secretos en config | [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] |
-| 2 | Outbox transaccional en Order API | [[Outbox Pattern]] |
+| 2 | Outbox transaccional en Order API | [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] |
 | 3 | Todos los consumidores idempotentes (tabla de procesados) | [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|Idempotent Consumer]] |
 | 4 | Errores permanentes → DeadLetter con razón; transitorios → backoff | [[02 - Queues y Topics#Message Settlement|Message Settlement]], [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] |
 | 5 | Orden por pedido en la saga mediante sessions | [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] |
 | 6 | Graceful shutdown probado | [[04 - NET y entorno local#Integracion con ASP.NET Core|Integracion con ASP.NET Core]] |
-| 7 | Trazas distribuidas API → workers en Application Insights | [[Observabilidad con Application Insights]] |
-| 8 | Alertas en DLQ > 0 y ActiveMessages creciendo | [[Metricas clave]] |
+| 7 | Trazas distribuidas API → workers en Application Insights | [[09 - Produccion y operacion#Observabilidad con Application Insights|Observabilidad con Application Insights]] |
+| 8 | Alertas en DLQ > 0 y ActiveMessages creciendo | [[09 - Produccion y operacion#Metricas clave|Metricas clave]] |
 | 9 | Infraestructura en Bicep o Terraform | [[06 - Laboratorios#Lab 01 - Namespace y Queue|Lab 01 - Namespace y Queue]] |
 | 10 | Herramienta de reprocesado de DLQ filtrando por razón | [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] |
 

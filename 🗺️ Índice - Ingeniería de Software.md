@@ -18,7 +18,8 @@ tipo: MOC
 ├── 🏗️ Sistemas distribuidos
 │   ├── [[🏗️ Diseño de Microservicios]]  ← MOC propio con todos los patrones
 │   ├── [[Idempotencia]]
-│   └── [[Teorema CAP y BASE]]
+│   ├── [[Teorema CAP y BASE]]
+│   └── [[00 - Indice y ruta de estudio|Azure Service Bus]]  ← curso completo: fundamentos → .NET → fiabilidad → patrones → producción, labs, troubleshooting, entrevistas
 ├── 💾 Datos
 │   ├── [[Bases de Datos SQL vs NoSQL]]
 │   ├── [[ACID en Bases de Datos]]

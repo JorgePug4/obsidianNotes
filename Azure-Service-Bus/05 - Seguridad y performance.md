@@ -84,7 +84,7 @@ Cuando todos los clientes usan Entra ID, desactiva la autenticación local del n
 - Olvidar que el Administration Client (`QueueExistsAsync` al arrancar) requiere permisos de gestión: la app falla con `Data Sender`. Mueve la creación de entidades a IaC.
 
 ### Relación
-- [[05 - Seguridad y performance#Private Endpoints|Private Endpoints]] · [[04 - NET y entorno local#Integracion con ASP.NET Core|Integracion con ASP.NET Core]] · [[Troubleshooting - Authorization failures]] · [[06 - Laboratorios#Lab 10 - Managed Identity|Lab 10 - Managed Identity]]
+- [[05 - Seguridad y performance#Private Endpoints|Private Endpoints]] · [[04 - NET y entorno local#Integracion con ASP.NET Core|Integracion con ASP.NET Core]] · [[10 - Troubleshooting#Troubleshooting - Authorization failures|Authorization failures]] · [[06 - Laboratorios#Lab 10 - Managed Identity|Lab 10 - Managed Identity]]
 - Docs: [Authenticate with Microsoft Entra ID](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-authentication-and-authorization)
 
 ---
@@ -121,7 +121,7 @@ graph LR
 El cliente sigue usando `sb-orders-prod.servicebus.windows.net`. La **zona DNS privada** hace que ese nombre resuelva a la IP privada. Si el DNS está mal, el cliente resuelve la IP pública, el firewall lo rechaza y ves errores de conexión o de autorización difíciles de interpretar.
 
 ### Puertos
-- AMQP: **5671** (TLS). Algunos entornos necesitan también 5672. [Probable]
+- AMQP: **5671** y **5672** (la guía oficial de troubleshooting pide tener ambos abiertos).
 - AMQP sobre WebSockets: **443**. Úsalo (`ServiceBusTransportType.AmqpWebSockets`) si un proxy o firewall corporativo solo permite HTTPS.
 
 ### Diagnóstico rápido
@@ -130,7 +130,7 @@ nslookup sb-orders-prod.servicebus.windows.net   # desde dentro de la VNet: debe
 ```
 
 ### Relación
-- [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · [[Tiers y facturacion]] · [[Troubleshooting - Connection failures]]
+- [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]] · [[10 - Troubleshooting#Troubleshooting - Connection failures|Connection failures]]
 
 ---
 
@@ -194,5 +194,5 @@ Con [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]], prefetch tiene
 - Métrica: `ActiveMessages` y, sobre todo, **la antigüedad del mensaje más viejo**. Una cola larga que se vacía rápido no es un problema; una cola corta con mensajes viejos, sí.
 
 ### Relación
-- [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[02 - Queues y Topics#Message Lock y Lock Renewal|Message Lock y Lock Renewal]] · [[Tiers y facturacion]] · [[Metricas clave]] · [[Troubleshooting - Consumer slow]]
+- [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[02 - Queues y Topics#Message Lock y Lock Renewal|Message Lock y Lock Renewal]] · [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]] · [[09 - Produccion y operacion#Metricas clave|Metricas clave]] · [[10 - Troubleshooting#Troubleshooting - Consumer slow|Consumer slow]]
 - Docs: [Best practices for performance](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-performance-improvements)

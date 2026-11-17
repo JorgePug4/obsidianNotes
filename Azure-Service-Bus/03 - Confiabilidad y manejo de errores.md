@@ -58,13 +58,13 @@ Todo consumidor debe ser **idempotente**: procesar el mismo mensaje N veces prod
 | Fallo | Qué garantiza Service Bus | Qué debes hacer tú |
 |---|---|---|
 | Consumer crash | Reentrega tras lock | Idempotencia |
-| Producer crash tras guardar en BD | Nada | [[Outbox Pattern]] |
+| Producer crash tras guardar en BD | Nada | [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] |
 | Network failure en send | Retry del SDK | `MessageId` determinista + DD |
 | Dependencia caída | Reentrega hasta MaxDeliveryCount | Backoff / circuit breaker ([[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]]) |
 | Mensaje inválido | DLQ tras N intentos | DeadLetter inmediato ([[02 - Queues y Topics#Message Settlement|Message Settlement]]) |
 
 ### Relación
-- [[02 - Queues y Topics#Peek-Lock vs Receive-and-Delete|Peek-Lock vs Receive-and-Delete]] · [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|Idempotent Consumer]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]] · [[Outbox Pattern]] · [[Inbox Pattern]]
+- [[02 - Queues y Topics#Peek-Lock vs Receive-and-Delete|Peek-Lock vs Receive-and-Delete]] · [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|Idempotent Consumer]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]] · [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]]
 
 ### Pregunta de entrevista
 *"Hemos activado duplicate detection, así que ya no necesitamos idempotencia." ¿Estás de acuerdo?* → No. DD deduplica **envíos** con el mismo `MessageId` dentro de la ventana. No impide la **reentrega** de un mismo mensaje por lock expirado o crash del consumidor, que es la causa más frecuente.
@@ -131,13 +131,13 @@ No hay atomicidad posible. Opciones:
 |---|---|
 | Correcto frente a todos los escenarios de duplicado | Tabla que crece → purga periódica (> TTL máximo + ventana de reprocesado de DLQ) |
 | Independiente del broker | Requiere que el productor genere `MessageId` estable |
-| Base del [[Inbox Pattern]] | Una escritura extra por mensaje |
+| Base del [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]] | Una escritura extra por mensaje |
 
 ### Cuándo evitarlo
 Nunca "evitar": como mucho, reducirlo a idempotencia natural cuando el efecto lo permite.
 
 ### Relación
-- [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]] · [[Inbox Pattern]] · [[Outbox Pattern]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]]
+- [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]] · [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]] · [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]]
 
 ### Pregunta de entrevista
 *¿Cómo garantizas que un pago no se cobra dos veces si el mensaje se entrega dos veces?* → Idempotency key = `MessageId` en la pasarela + registro de procesados en la misma transacción que el cambio de estado del pedido + `MessageId` determinista desde el productor. Explica por qué DD no basta.
@@ -175,10 +175,10 @@ var options = new ServiceBusClientOptions
     RetryOptions = new ServiceBusRetryOptions
     {
         Mode = ServiceBusRetryMode.Exponential,   // default
-        MaxRetries = 3,                           // default [Probable]
+        MaxRetries = 3,                           // default (verificado: guía de troubleshooting)
         Delay = TimeSpan.FromSeconds(0.8),        // base del backoff [Probable]
         MaxDelay = TimeSpan.FromSeconds(60),      // [Probable]
-        TryTimeout = TimeSpan.FromSeconds(60)     // timeout de CADA intento [Probable]
+        TryTimeout = TimeSpan.FromSeconds(60)     // timeout de CADA intento (verificado)
     }
 };
 ```
@@ -253,7 +253,7 @@ await args.CompleteMessageAsync(msg);
 | Desconocido | Abandon; `MaxDeliveryCount` limitado (5-10) acaba en DLQ |
 
 ### Relación
-- [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Poison Messages|Poison Messages]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[Circuit Breaker]] · [[02 - Queues y Topics#Scheduled Messages|Scheduled Messages]] · [[06 - Laboratorios#Lab 08 - Retry|Lab 08 - Retry]]
+- [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Poison Messages|Poison Messages]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[08 - Patrones de arquitectura#Circuit Breaker|Circuit Breaker]] · [[02 - Queues y Topics#Scheduled Messages|Scheduled Messages]] · [[06 - Laboratorios#Lab 08 - Retry|Lab 08 - Retry]]
 
 ---
 
@@ -283,7 +283,7 @@ if (args.Message.DeliveryCount > 3)
 5. **Alertar sobre la DLQ** y analizar por razón.
 
 ### Relación
-- [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[Troubleshooting - Dead-letter increasing]]
+- [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[10 - Troubleshooting#Troubleshooting - Dead-letter increasing|Dead-letter increasing]]
 
 ---
 
@@ -312,7 +312,7 @@ Lista oficial: [Dead-letter queues overview](https://learn.microsoft.com/azure/s
 > [!important] Por defecto, un mensaje que **expira** se **borra**, no va a la DLQ. Si el mensaje tiene valor de negocio, activa `DeadLetteringOnMessageExpiration`.
 
 ### Propiedades de un mensaje en DLQ
-`DeadLetterReason`, `DeadLetterErrorDescription`, `DeadLetterSource` (entidad original si llegó por auto-forward), `DeliveryCount`, `EnqueuedTime` original y todas las propiedades del mensaje. Los mensajes en DLQ **no expiran por TTL** [Probable] y cuentan para la cuota de tamaño de la entidad: una DLQ que crece puede acabar llenando la entidad y bloqueando **nuevos envíos**.
+`DeadLetterReason`, `DeadLetterErrorDescription`, `DeadLetterSource` (entidad original si llegó por auto-forward), `DeliveryCount`, `EnqueuedTime` original y todas las propiedades del mensaje. Los mensajes en DLQ **no expiran por TTL** (verificado: la DLQ no aplica TTL) y cuentan para la cuota de tamaño de la entidad: una DLQ que crece puede acabar llenando la entidad y bloqueando **nuevos envíos**.
 
 ### Leer la DLQ en .NET
 ```csharp
@@ -379,7 +379,7 @@ flowchart LR
     T --> X[Descartar con registro de auditoría]
 ```
 1. **Clasifica en el consumidor**: permanente → DeadLetter inmediato con razón estable; transitorio → reintentos ([[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]]).
-2. **Alerta** sobre la métrica `DeadletteredMessages` por entidad (umbral > 0 o tendencia creciente) → [[Metricas clave]].
+2. **Alerta** sobre la métrica `DeadletteredMessages` por entidad (umbral > 0 o tendencia creciente) → [[09 - Produccion y operacion#Metricas clave|Metricas clave]].
 3. **Dueño claro**: cada DLQ tiene un equipo responsable y un SLA de revisión. Una DLQ sin dueño es un vertedero.
 4. **Herramienta de reprocesado** (script/endpoint admin/Service Bus Explorer del portal) filtrando por razón, con auditoría.
 5. **Retención**: archiva (p. ej. a Blob) y completa lo que no se reprocesará; no dejes que la DLQ llene la entidad.
@@ -394,7 +394,7 @@ flowchart LR
 - Reprocesar sin corregir la causa.
 
 ### Relación
-- [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Poison Messages|Poison Messages]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[Metricas clave]] · [[Troubleshooting - Dead-letter increasing]] · [[06 - Laboratorios#Lab 07 - Dead Letter Queue|Lab 07 - Dead Letter Queue]]
+- [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Poison Messages|Poison Messages]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[09 - Produccion y operacion#Metricas clave|Metricas clave]] · [[10 - Troubleshooting#Troubleshooting - Dead-letter increasing|Dead-letter increasing]] · [[06 - Laboratorios#Lab 07 - Dead Letter Queue|Lab 07 - Dead Letter Queue]]
 
 ### Preguntas de entrevista
 - *¿Cuándo un mensaje va a DLQ?* → Enumera las causas automáticas + la explícita, y menciona que la expiración **no** va a DLQ por defecto.
@@ -471,7 +471,7 @@ El `MessageId` admite como máximo 128 caracteres.
 - Productores que no pueden generar `MessageId` estables: DD no aportaría nada.
 
 ### Relación
-- [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]] · [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|Idempotent Consumer]] · [[Outbox Pattern]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]]
+- [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]] · [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|Idempotent Consumer]] · [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]]
 
 ### Pregunta de entrevista
 *Activamos duplicate detection y seguimos viendo pedidos cobrados dos veces. ¿Por qué?* → DD solo actúa sobre envíos repetidos con el mismo `MessageId` dentro de la ventana. El duplicado probablemente viene de una reentrega al consumidor (lock expirado o crash) o de un `MessageId` aleatorio. Solución: consumidor idempotente con clave de negocio.
@@ -533,10 +533,10 @@ Fuente: [Sample06_Transactions](https://github.com/Azure/azure-sdk-for-net/blob/
 | Limitación | Consecuencia |
 |---|---|
 | Todas las entidades en el **mismo namespace** | No sirve entre namespaces |
-| **No** participa en transacciones distribuidas (MSDTC/2PC) con SQL u otros recursos | No puedes hacer atómico "INSERT en SQL + Send" → [[Outbox Pattern]] |
+| **No** participa en transacciones distribuidas (MSDTC/2PC) con SQL u otros recursos | No puedes hacer atómico "INSERT en SQL + Send" → [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] |
 | Timeout de **2 minutos** desde la primera operación | Haz el trabajo pesado antes de abrir la transacción |
 | El SDK **no reintenta** operaciones dentro de una transacción | Un error transitorio aborta la transacción; reintenta la transacción completa |
-| Límite de mensajes por transacción | [Suposición] fuentes no oficiales citan 100; verifícalo en quotas antes de diseñar lotes grandes |
+| Límite de **100 mensajes** por transacción (verificado en [quotas](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-quotas)) | Divide lotes grandes en varias transacciones |
 
 ### Comparativa
 | | Transacción Service Bus | Transacción de BD | Transacción distribuida (2PC) |
@@ -554,7 +554,7 @@ await db.SaveChangesAsync();          // SQL
 await sender.SendMessageAsync(msg);   // Service Bus
 ts.Complete();
 ```
-Esto **no** es atómico entre SQL y Service Bus. Según la versión y la configuración puede lanzar una excepción, intentar escalar a una transacción distribuida no soportada o dar una falsa sensación de atomicidad. Solución: [[Outbox Pattern]].
+Esto **no** es atómico entre SQL y Service Bus. Según la versión y la configuración puede lanzar una excepción, intentar escalar a una transacción distribuida no soportada o dar una falsa sensación de atomicidad. Solución: [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]].
 
 ### Cuándo utilizarlas
 - Workers "recibo → publico siguiente paso" (pipelines, sagas coreografiadas dentro del broker).
@@ -566,7 +566,7 @@ Esto **no** es atómico entre SQL y Service Bus. Según la versión y la configu
 - Cuando el efecto importante está en tu BD: ahí la transacción que necesitas es la de la BD (outbox/inbox).
 
 ### Relación
-- [[Outbox Pattern]] · [[Inbox Pattern]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]]
+- [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]]
 
 ### Pregunta de entrevista
 *¿Puedo guardar el pedido en SQL y publicar el evento en una transacción?* → No, Service Bus no participa en 2PC. Guarda el pedido y el mensaje en una tabla outbox dentro de la misma transacción SQL, y un relay publica después. Asume duplicados y haz idempotente al consumidor.
@@ -640,7 +640,7 @@ processor.ProcessMessageAsync += async args =>
 - Estable: todos los productores deben calcularlo igual.
 
 ### Relación
-- [[03 - Confiabilidad y manejo de errores#ServiceBusSessionProcessor|ServiceBusSessionProcessor]] · [[Saga Pattern]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] (Defer como alternativa peor) · [[Troubleshooting - Session lock problems]] · [[06 - Laboratorios#Lab 09 - Sessions|Lab 09 - Sessions]]
+- [[03 - Confiabilidad y manejo de errores#ServiceBusSessionProcessor|ServiceBusSessionProcessor]] · [[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]] · [[02 - Queues y Topics#Message Settlement|Message Settlement]] (Defer como alternativa peor) · [[10 - Troubleshooting#Troubleshooting - Session lock problems|Session lock problems]] · [[06 - Laboratorios#Lab 09 - Sessions|Lab 09 - Sessions]]
 
 ### Preguntas de entrevista
 - *¿Service Bus garantiza orden FIFO?* → Solo dentro de una sesión. Una queue sin sesiones con consumidores concurrentes no garantiza orden de procesamiento.
@@ -730,4 +730,4 @@ ServiceBusSessionReceiver next = await client.AcceptNextSessionAsync("order-life
 - Una sesión "atascada": un mensaje venenoso en la cabeza de la sesión bloquea todos los siguientes hasta que vaya a la DLQ. Por eso un `MaxDeliveryCount` razonable es más crítico aquí.
 
 ### Relación
-- [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[05 - Seguridad y performance#Performance tuning|Performance tuning]] · [[Troubleshooting - Session lock problems]]
+- [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[05 - Seguridad y performance#Performance tuning|Performance tuning]] · [[10 - Troubleshooting#Troubleshooting - Session lock problems|Session lock problems]]

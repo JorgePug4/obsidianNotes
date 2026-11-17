@@ -19,7 +19,7 @@ tags: [azure-service-bus, nivel/architect, nivel/senior, plan, referencia]
 > Lee [[00 - Indice y ruta de estudio#Estado del producto y cambios recientes|Estado del producto y cambios recientes]]. El **30 de septiembre de 2026** se retira el protocolo SBMP y con él los SDKs legacy (`WindowsAzure.ServiceBus`, `Microsoft.Azure.ServiceBus`). Todo tutorial que use `QueueClient`, `IMessageSender` o `MessageHandlerOptions` está **obsoleto**. Este curso usa exclusivamente `Azure.Messaging.ServiceBus`.
 
 ### Cómo usar este vault
-- Leyenda de estado: ✅ nota completa · 🚧 pendiente (fase 2/3). Los wikilinks a notas pendientes aparecen en gris en Obsidian: es intencional, son el backlog.
+- Leyenda de estado: ✅ nota completa. Las tres fases están completas (nov-2026); ver [[00 - Indice y ruta de estudio#Backlog y fases|Backlog y fases]].
 - Grafo: abre el Graph View filtrando por `tag:#azure-service-bus`.
 - Relaciones conceptuales: [[00 - Indice y ruta de estudio#Mapa de relaciones|00 - Mapa de relaciones]]
 - Plan diario: [[00 - Indice y ruta de estudio#Ruta de 30 dias|00 - Ruta de 30 dias]]
@@ -30,7 +30,7 @@ tags: [azure-service-bus, nivel/architect, nivel/senior, plan, referencia]
 2. ✅ [[01 - Fundamentos y arquitectura#Comunicacion sincrona vs asincrona|Comunicacion sincrona vs asincrona]]
 3. ✅ [[01 - Fundamentos y arquitectura#Message Broker|Message Broker]]
 4. ✅ [[01 - Fundamentos y arquitectura#Service Bus vs Storage Queue vs Event Grid vs Event Hubs|Service Bus vs Storage Queue vs Event Grid vs Event Hubs]]
-5. 🚧 [[Event-Driven Architecture]]
+5. ✅ [[08 - Patrones de arquitectura#Event-Driven Architecture|Event-Driven Architecture]]
 
 ### Nivel 2 — Fundamentos del broker
 1. ✅ [[01 - Fundamentos y arquitectura#Namespace y entidades|Namespace y entidades]]
@@ -59,13 +59,16 @@ tags: [azure-service-bus, nivel/architect, nivel/senior, plan, referencia]
 6. ✅ [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · ✅ [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]]
 
 ### Nivel 5 — Microservicios y arquitectura distribuida
-🚧 [[Commands vs Events]] · [[Outbox Pattern]] · [[Inbox Pattern]] · [[Saga Pattern]] · [[Competing Consumers]] · [[Eventual Consistency]]
+1. ✅ [[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]] · ✅ [[08 - Patrones de arquitectura#Publisher Subscriber|Publisher Subscriber]] · ✅ [[08 - Patrones de arquitectura#Competing Consumers|Competing Consumers]]
+2. ✅ [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · ✅ [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]]
+3. ✅ [[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]] · ✅ [[08 - Patrones de arquitectura#Eventual Consistency|Eventual Consistency]] · ✅ [[08 - Patrones de arquitectura#CQRS|CQRS]]
+4. ✅ [[08 - Patrones de arquitectura#Circuit Breaker|Circuit Breaker]] · ✅ [[08 - Patrones de arquitectura#Claim Check Pattern|Claim Check Pattern]] · ✅ [[08 - Patrones de arquitectura#Versionado de mensajes|Versionado de mensajes]] · ✅ [[08 - Patrones de arquitectura#Frameworks de mensajeria NET|Frameworks de mensajeria NET]]
 
 ### Nivel 6 — Producción
-✅ [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · ✅ [[05 - Seguridad y performance#Private Endpoints|Private Endpoints]] · ✅ [[05 - Seguridad y performance#Performance tuning|Performance tuning]] · 🚧 [[Metricas clave]] · [[Tiers y facturacion]] · [[Geo-Replication]]
+✅ [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · ✅ [[05 - Seguridad y performance#Private Endpoints|Private Endpoints]] · ✅ [[05 - Seguridad y performance#Performance tuning|Performance tuning]] · ✅ [[09 - Produccion y operacion#Metricas clave|Metricas clave]] · ✅ [[09 - Produccion y operacion#Observabilidad con Application Insights|Observabilidad con Application Insights]] · ✅ [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]] · ✅ [[09 - Produccion y operacion#Geo-Replication|Geo-Replication]] · ✅ [[09 - Produccion y operacion#Service Bus vs otras tecnologias|Service Bus vs otras tecnologias]]
 
 ### Nivel 7 — Senior / Arquitecto
-🚧 [[Troubleshooting - Messages stuck]] · [[Casos reales]] · ✅ [[07 - Entrevistas y cheat sheet#Entrevistas - Basicas|Entrevistas - Basicas]] · 🚧 Intermedias/Avanzadas/Architect
+✅ [[10 - Troubleshooting|10 - Troubleshooting]] (método + 13 runbooks) · ✅ [[09 - Produccion y operacion#Casos reales|Casos reales]] · ✅ [[07 - Entrevistas y cheat sheet#Entrevistas - Basicas|Entrevistas - Basicas]] · ✅ [[07 - Entrevistas y cheat sheet#Entrevistas - Intermedias|Intermedias]] · ✅ [[07 - Entrevistas y cheat sheet#Entrevistas - Avanzadas|Avanzadas]] · ✅ [[07 - Entrevistas y cheat sheet#Entrevistas - Architect|Architect]]
 
 ### Práctica
 - ✅ [[06 - Laboratorios#Proyecto final|Proyecto final]] (enunciado y arquitectura)
@@ -79,10 +82,14 @@ tags: [azure-service-bus, nivel/architect, nivel/senior, plan, referencia]
 - ✅ [[06 - Laboratorios#Lab 08 - Retry|Lab 08 - Retry]]
 - ✅ [[06 - Laboratorios#Lab 09 - Sessions|Lab 09 - Sessions]]
 - ✅ [[06 - Laboratorios#Lab 10 - Managed Identity|Lab 10 - Managed Identity]]
-- 🚧 Labs 11–15 (Observabilidad, Microservicios, Outbox, Saga, Proyecto final guiado)
+- ✅ [[06 - Laboratorios#Lab 11 - Observabilidad|Lab 11 - Observabilidad]]
+- ✅ [[06 - Laboratorios#Lab 12 - Microservicios|Lab 12 - Microservicios]]
+- ✅ [[06 - Laboratorios#Lab 13 - Outbox con EF Core|Lab 13 - Outbox con EF Core]]
+- ✅ [[06 - Laboratorios#Lab 14 - Saga con compensacion|Lab 14 - Saga con compensacion]]
+- ✅ [[06 - Laboratorios#Lab 15 - Proyecto final guiado|Lab 15 - Proyecto final guiado]]
 
 ### Referencia rápida
-- ✅ [[07 - Entrevistas y cheat sheet#Service Bus Cheat Sheet|Service Bus Cheat Sheet]]
+- ✅ [[07 - Entrevistas y cheat sheet#Service Bus Cheat Sheet|Service Bus Cheat Sheet]] · ✅ [[07 - Entrevistas y cheat sheet#Cheat sheets adicionales|Cheat sheets adicionales]] (SDK, excepciones, CLI, KQL, patrones, tecnología, seguridad, checklist)
 
 ---
 
@@ -115,11 +122,11 @@ Fuente: [Aviso de retiro](https://azure.microsoft.com/updates/retirement-notice-
 - **Standard**: añade topics/subscriptions, sessions, transacciones, duplicate detection. Capacidad compartida, pago por operación. Mensaje máx. 256 KB.
 - **Premium**: messaging units dedicadas (1, 2, 4, 8, 16), mensajes grandes (por defecto 1 MB, configurable hasta 100 MB solo con AMQP y sin batching), VNet/Private Link, Geo-Replication, CMK, JMS 2.0.
 
-Detalle: [[Tiers y facturacion]]
+Detalle: [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]]
 
 ### Novedades relevantes para desarrollo
 - **Service Bus Emulator** (contenedor Docker, MCR). Solo dev/test, sin SLA, sin Entra ID ni VNet. Soporta ya el Administration Client (puerto 5300). Ver [[04 - NET y entorno local#Emulador local|Emulador local]].
-- **Geo-Replication** (Premium): replica metadatos **y datos** a regiones secundarias. No confundir con **Geo-Disaster Recovery** clásico, que solo replica metadatos. Ver [[Geo-Replication]].
+- **Geo-Replication** (Premium): replica metadatos **y datos** a regiones secundarias. No confundir con **Geo-Disaster Recovery** clásico, que solo replica metadatos. Ver [[09 - Produccion y operacion#Geo-Replication|Geo-Replication]].
 - **Particionado en Premium**: se decide al crear el namespace (todas las entidades quedan particionadas). En Basic/Standard se decide por entidad (16 particiones).
 
 ### Propiedades inmutables tras crear la entidad
@@ -159,16 +166,16 @@ Regla: **cada día termina con algo ejecutado**, no solo leído. Si un día solo
 | 18 | [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] | [[06 - Laboratorios#Lab 10 - Managed Identity|Lab 10 - Managed Identity]] |
 | 19 | [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] | [[06 - Laboratorios#Lab 09 - Sessions|Lab 09 - Sessions]] |
 | 20 | [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]] | Receive + Send atómico |
-| 21 | Repaso + Entrevistas intermedias | — |
-| 22 | [[Commands vs Events]], [[Competing Consumers]] | Diagrama de un sistema propio |
-| 23 | [[Outbox Pattern]] | Lab 13 con EF Core |
-| 24 | [[Inbox Pattern]], [[Eventual Consistency]] | Integrar Inbox en el Lab 13 |
-| 25 | [[Saga Pattern]] | Lab 14: coreografía de Order/Payment/Inventory con compensación |
+| 21 | Repaso + [[07 - Entrevistas y cheat sheet#Entrevistas - Intermedias|Entrevistas - Intermedias]] | Responder 20 preguntas sin mirar |
+| 22 | [[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]], [[08 - Patrones de arquitectura#Competing Consumers|Competing Consumers]] | Diagrama de un sistema propio + [[06 - Laboratorios#Lab 12 - Microservicios|Lab 12 - Microservicios]] |
+| 23 | [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] | [[06 - Laboratorios#Lab 13 - Outbox con EF Core|Lab 13 - Outbox con EF Core]] |
+| 24 | [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]], [[08 - Patrones de arquitectura#Eventual Consistency|Eventual Consistency]] | Integrar Inbox en el Lab 13 |
+| 25 | [[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]] | [[06 - Laboratorios#Lab 14 - Saga con compensacion|Lab 14 - Saga con compensacion]] |
 | 26 | [[05 - Seguridad y performance#Performance tuning|Performance tuning]] | Benchmark prefetch/concurrencia |
-| 27 | [[Metricas clave]] | Lab 11: alertas de DLQ y active messages |
-| 28 | [[Tiers y facturacion]], [[Geo-Replication]] | Estimar coste de un sistema de 5M msgs/día (con la calculadora oficial) |
-| 29 | Troubleshooting completo | Resolver 5 escenarios de [[21 - Troubleshooting]] |
-| 30 | [[06 - Laboratorios#Proyecto final|Proyecto final]] | Demo + explicación de diseño de 10 minutos |
+| 27 | [[09 - Produccion y operacion#Metricas clave|Metricas clave]] | [[06 - Laboratorios#Lab 11 - Observabilidad|Lab 11 - Observabilidad]] |
+| 28 | [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]], [[09 - Produccion y operacion#Geo-Replication|Geo-Replication]] | Estimar coste de un sistema de 5M msgs/día (con la calculadora oficial) |
+| 29 | Troubleshooting completo + [[07 - Entrevistas y cheat sheet#Entrevistas - Avanzadas|Entrevistas - Avanzadas]] | Resolver 5 escenarios de [[10 - Troubleshooting|10 - Troubleshooting]] |
+| 30 | [[06 - Laboratorios#Proyecto final|Proyecto final]] ([[06 - Laboratorios#Lab 15 - Proyecto final guiado|Lab 15]]) + [[07 - Entrevistas y cheat sheet#Entrevistas - Architect|Entrevistas - Architect]] | Demo + explicación de diseño de 10 minutos |
 
 ---
 
@@ -213,7 +220,7 @@ graph TD
 ### Cadenas de razonamiento que debes poder recitar
 1. [[02 - Queues y Topics#Peek-Lock vs Receive-and-Delete|Peek-Lock]] → el mensaje puede entregarse otra vez si el lock expira → [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]] → el consumidor debe ser [[03 - Confiabilidad y manejo de errores#Idempotent Consumer|idempotente]].
 2. Excepción en el handler → abandon implícito → `DeliveryCount++` → al superar `MaxDeliveryCount` → [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]].
-3. Guardar en BD y publicar evento no es atómico → [[Outbox Pattern]] → el relay puede publicar dos veces → consumidor idempotente otra vez.
+3. Guardar en BD y publicar evento no es atómico → [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] → el relay puede publicar dos veces → consumidor idempotente otra vez.
 4. `PrefetchCount` alto + procesamiento lento → locks expiran en el buffer local → `MessageLockLost` → reentregas → [[02 - Queues y Topics#Message Lock y Lock Renewal|Message Lock y Lock Renewal]].
 5. Orden garantizado solo con [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]]; una queue normal con varios consumidores **no** preserva orden de procesamiento.
 
@@ -245,10 +252,10 @@ Un senior no se distingue por saber las APIs, sino por saber **qué falla y por 
 9. `MaxConcurrentCalls` vs `PrefetchCount` y cómo prefetch puede causar pérdida de locks → [[05 - Seguridad y performance#Performance tuning|Performance tuning]]
 10. Managed Identity + roles `Azure Service Bus Data Sender/Receiver` en lugar de SAS → [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]]
 11. Sessions para orden por clave; por qué no hay orden global con consumidores concurrentes → [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]]
-12. Outbox para publicar de forma consistente con la BD → [[Outbox Pattern]]
+12. Outbox para publicar de forma consistente con la BD → [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]]
 13. Queue vs Topic, filtros SQL vs Correlation (coste de evaluación) → [[02 - Queues y Topics#Filters y Rules|Filters y Rules]]
 14. Versionado de contratos de mensaje sin romper consumidores → [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]]
-15. Métricas que importan: Active, DeadLettered, Throttled, ServerErrors → [[Metricas clave]]
+15. Métricas que importan: Active, DeadLettered, Throttled, ServerErrors → [[09 - Produccion y operacion#Metricas clave|Metricas clave]]
 16. Propiedades inmutables tras crear la entidad → [[00 - Indice y ruta de estudio#Estado del producto y cambios recientes|Estado del producto y cambios recientes]]
 
 ---
@@ -259,29 +266,32 @@ Un senior no se distingue por saber las APIs, sino por saber **qué falla y por 
 El arquitecto responde a "¿deberíamos usar Service Bus aquí?" — y a veces la respuesta correcta es **no**.
 
 1. **Selección de tecnología**: mensajes de negocio (Service Bus) vs eventos de estado/reactivos (Event Grid) vs streams de telemetría (Event Hubs/Kafka) → [[01 - Fundamentos y arquitectura#Service Bus vs Storage Queue vs Event Grid vs Event Hubs|Service Bus vs Storage Queue vs Event Grid vs Event Hubs]]
-2. **Commands vs Events vs Request/Response**: acoplamiento temporal, de conocimiento y de orden → [[Commands vs Events]]
-3. **Coreografía vs orquestación** en sagas; dónde vive el estado; compensaciones → [[Saga Pattern]]
-4. **Consistencia**: outbox + inbox como sustituto de transacciones distribuidas (Service Bus no participa en 2PC/MSDTC) → [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]], [[Eventual Consistency]]
+2. **Commands vs Events vs Request/Response**: acoplamiento temporal, de conocimiento y de orden → [[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]]
+3. **Coreografía vs orquestación** en sagas; dónde vive el estado; compensaciones → [[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]]
+4. **Consistencia**: outbox + inbox como sustituto de transacciones distribuidas (Service Bus no participa en 2PC/MSDTC) → [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]], [[08 - Patrones de arquitectura#Eventual Consistency|Eventual Consistency]]
 5. **Topología**: un topic por bounded context vs por tipo de evento; límites de subscriptions por topic y coste de filtros → [[02 - Queues y Topics#Topics y Subscriptions|Topics y Subscriptions]]
 6. **Particionado del orden**: sessions como unidad de paralelismo; hot sessions → [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]]
-7. **Capacidad**: Standard (compartido, throttling) vs Premium (MUs dedicadas, autoscale por CPU/memoria) → [[Tiers y facturacion]]
-8. **Resiliencia regional**: availability zones, Geo-DR (solo metadatos) vs Geo-Replication (datos) → [[Geo-Replication]]
+7. **Capacidad**: Standard (compartido, throttling) vs Premium (MUs dedicadas, autoscale por CPU/memoria) → [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]]
+8. **Resiliencia regional**: availability zones, Geo-DR (solo metadatos) vs Geo-Replication (datos) → [[09 - Produccion y operacion#Geo-Replication|Geo-Replication]]
 9. **Seguridad de red**: Private Endpoints, desactivar acceso público y SAS local (`disableLocalAuth`) → [[05 - Seguridad y performance#Private Endpoints|Private Endpoints]]
-10. **Mensajes grandes**: claim-check pattern vs Premium 100 MB → [[Claim Check Pattern]]
-11. **Evolución de contratos**: versionado, tolerant reader, esquemas compartidos vs duplicados → [[Versionado de mensajes]]
+10. **Mensajes grandes**: claim-check pattern vs Premium 100 MB → [[08 - Patrones de arquitectura#Claim Check Pattern|Claim Check Pattern]]
+11. **Evolución de contratos**: versionado, tolerant reader, esquemas compartidos vs duplicados → [[08 - Patrones de arquitectura#Versionado de mensajes|Versionado de mensajes]]
 12. **Operabilidad**: estrategia de DLQ organizativa (quién la mira, SLA de reprocesado) → [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]]
-13. **Portabilidad**: coste de acoplarse a features propietarias (sessions, SQL filters) vs abstracciones (MassTransit, NServiceBus, Wolverine) → [[Frameworks de mensajeria NET]]
+13. **Portabilidad**: coste de acoplarse a features propietarias (sessions, SQL filters) vs abstracciones (MassTransit, NServiceBus, Wolverine) → [[08 - Patrones de arquitectura#Frameworks de mensajeria NET|Frameworks de mensajeria NET]]
 
 ---
 
 ## Backlog y fases
 *00 - Backlog y fases de construcción*
 
-### Fase 1 ✅ (esta entrega) — núcleo conceptual y .NET
+### Fase 1 ✅ — núcleo conceptual y .NET
 Mapas, ruta de 30 días, listas Senior/Architect, estado del producto, fundamentos, arquitectura, peek-lock, locks, settlement, anatomía del mensaje, SDK, envío, processor, ASP.NET Core, at-least-once, idempotencia, DLQ, 20 preguntas básicas, cheat sheet general, proyecto final.
 
 ### Fase 2 ✅ — features del broker y fiabilidad
 TTL y expiracion · Scheduled Messages · Topics y Subscriptions · Filters y Rules · Auto-forwarding · Sessions · ServiceBusSessionProcessor · ServiceBusReceiver manual · Transactions · Duplicate Detection · Retry Policies · Poison Messages · Seguridad con Entra ID y RBAC · Private Endpoints · Performance tuning · Emulador local · Labs 01–10
 
-### Fase 3 🚧 — arquitectura, producción y entrevistas avanzadas
+### Fase 3 ✅ (nov-2026) — arquitectura, producción y entrevistas avanzadas
+Notas nuevas: [[08 - Patrones de arquitectura|08 - Patrones de arquitectura]] · [[09 - Produccion y operacion|09 - Produccion y operacion]] · [[10 - Troubleshooting|10 - Troubleshooting]]. Ampliadas: 06 (Labs 11–15) y 07 (60 preguntas + cheat sheets).
+
+Contenido:
 Commands vs Events · Event-Driven Architecture · Competing Consumers · Publisher Subscriber · Outbox · Inbox · Saga · CQRS · Circuit Breaker · Eventual Consistency · Claim Check · Versionado de mensajes · Frameworks de mensajeria NET · Metricas clave · Observabilidad con Application Insights · Tiers y facturacion · Geo-Replication · Service Bus vs otras tecnologias (Kafka, RabbitMQ, SQS, SNS) · 13 notas de troubleshooting · Casos reales · Entrevistas intermedias/avanzadas/architect (60) · Cheat sheets restantes (8) · Labs 11–15
