@@ -196,7 +196,7 @@ Eventos de Envíos  ─┘
 
 **Lo que se pierde:** `JOIN` y transacciones entre shards; consultas que cruzan shards (*scatter/gather*) son lentas; rebalancear es costoso.
 
-**En la práctica cloud:** muchas BD gestionadas lo hacen por ti — Azure Cosmos DB (*partition key*), Azure SQL Hyperscale/Elastic Database tools, Azure Cosmos DB for PostgreSQL (Citus), MongoDB, DynamoDB. Elegir bien la *partition key* sigue siendo tu responsabilidad.
+**En la práctica cloud:** muchas BD gestionadas lo hacen por ti — Azure Cosmos DB (*partition key*), Azure Database for PostgreSQL con *elastic clusters* (basados en Citus), MongoDB, DynamoDB. En Azure SQL, el sharding es a nivel de aplicación con las *Elastic Database tools* (Hyperscale escala el almacenamiento de una sola BD, no es sharding). Elegir bien la *partition key* sigue siendo tu responsabilidad.
 
 ---
 
@@ -229,7 +229,7 @@ Clientes (PK = clienteId)        ÍndicePorEmail (PK = email)
 
 ```csharp
 // Azure Blob Storage: SAS de delegación de usuario (firmada con Entra ID, no con la account key)
-var key = await blobService.GetUserDelegationKeyAsync(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddMinutes(10));
+UserDelegationKey key = (await blobService.GetUserDelegationKeyAsync(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddMinutes(10))).Value;
 var blob = container.GetBlobClient($"usuarios/{userId}/{Guid.NewGuid()}.jpg");
 var sas = new BlobSasBuilder
 {

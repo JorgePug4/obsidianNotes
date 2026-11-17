@@ -152,7 +152,7 @@ spec:
 **Trade-offs.** Separa la inicialización de la imagen de la app (que no necesita herramientas como `nc` o `git`). Pero ralentiza el arranque, y **esperar a dependencias en un init container no sustituye a la resiliencia en tiempo de ejecución**: la BD puede caer cinco minutos después.
 
 > [!warning] Migraciones en init containers
-> Si 5 réplicas arrancan a la vez, ejecutan 5 migraciones en paralelo. Usa una herramienta que bloquee (EF Core no lo hacía hasta .NET 9, que añadió un bloqueo de migración para algunos proveedores — verifica tu versión y proveedor), o mejor un `Job` separado.
+> Si 5 réplicas arrancan a la vez, ejecutan 5 migraciones en paralelo. Usa una herramienta que lo impida (EF Core 9 añadió protección contra migraciones concurrentes mediante un bloqueo; verifica que tu versión y proveedor lo soportan), o mejor un `Job` separado.
 
 ---
 

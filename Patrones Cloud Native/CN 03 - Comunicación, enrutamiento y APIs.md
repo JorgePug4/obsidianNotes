@@ -140,7 +140,7 @@ En Kubernetes no tienes que implementarlo: el **Service** + **CoreDNS** es serve
 
 **Qué te da:** mTLS automático e identidad de servicio, políticas de autorización (quién puede llamar a quién), reintentos/timeouts/outlier detection, división de tráfico (canary, espejo), telemetría uniforme (métricas RED y trazas).
 
-**Productos:** Istio, Linkerd, Cilium Service Mesh, Consul Connect. (Open Service Mesh, que usaba AKS como complemento, fue retirado; AKS ofrece ahora un complemento basado en Istio.)
+**Productos:** Istio, Linkerd, Cilium Service Mesh, Consul Connect. (El proyecto Open Service Mesh se archivó en 2023 y Microsoft anunció la retirada de su complemento para AKS; la alternativa recomendada es el complemento de AKS basado en Istio.)
 
 **Cuándo usarlo.** Muchos servicios, varios lenguajes, requisitos de mTLS/Zero Trust o de gestión de tráfico avanzada.
 **Cuándo no.** Pocos servicios o un solo lenguaje con buenas librerías: el coste operativo (actualizar el mesh, depurar el proxy, recursos de sidecars) suele superar el beneficio.

@@ -154,7 +154,9 @@ Tipos (clasificación de Pete Hodgson en martinfowler.com):
 builder.Configuration.AddAzureAppConfiguration(o => o
     .Connect(new Uri(builder.Configuration["AppConfig:Endpoint"]!), new DefaultAzureCredential())
     .UseFeatureFlags(f => f.SetRefreshInterval(TimeSpan.FromSeconds(30))));
+builder.Services.AddAzureAppConfiguration();   // necesario para el refresco en caliente
 builder.Services.AddFeatureManagement();
+// ... tras Build():  app.UseAzureAppConfiguration();
 
 app.MapGet("/checkout", async (IFeatureManager features) =>
     await features.IsEnabledAsync("NuevoCheckout")
