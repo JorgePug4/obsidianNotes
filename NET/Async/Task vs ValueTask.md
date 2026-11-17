@@ -1,10 +1,12 @@
 ---
 tags: [dotnet, csharp, async, rendimiento]
-up: "[[🗺️ Índice - Ingeniería de Software]]"
+up: "[[00 - Async en .NET - Índice]]"
 aliases: [ValueTask, Task vs ValueTask]
 ---
 
 # 🚀 Task vs ValueTask en .NET
+
+> Nota complementaria del nivel 🔴 10 del [[00 - Async en .NET - Índice|curso de Async en .NET]]. Requisito: [[02 - async y await - lo básico]] y [[03 - Cómo funciona por dentro]].
 
 > [!info] `ValueTask<T>` llegó con .NET Core 2.0 (2017); la versión no genérica `ValueTask` e `IValueTaskSource<T>` con .NET Core 2.1. Es una **optimización**, no un reemplazo de `Task`.
 
@@ -170,4 +172,4 @@ var b = await reutilizable; // seguro tras Preserve()
 - Microsoft Learn, *Async guidance* (David Fowler): https://github.com/davidfowl/AspNetCoreDiagnosticScenarios/blob/master/AsyncGuidance.md
 
 ---
-⬅️ [[🗺️ Índice - Ingeniería de Software|Volver al índice de Ingeniería de Software]]
+⬅️ [[10 - Rendimiento y diagnóstico]] · ⬆️ [[00 - Async en .NET - Índice]] · [[🗺️ Índice - Ingeniería de Software|Índice de Ingeniería de Software]]

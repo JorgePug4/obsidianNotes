@@ -28,7 +28,8 @@ tipo: MOC
 │   ├── [[Diseño Api Rest|Diseño de APIs REST]]
 │   └── [[Status Code|Códigos de estado HTTP]]
 ├── ⚙️ Lenguajes y runtime
-│   ├── [[Task vs ValueTask|Task vs ValueTask (.NET)]]
+│   ├── [[00 - Async en .NET - Índice]]  ← curso completo: fundamentos → internals → concurrencia → producción, labs, entrevistas
+│   │   └── [[Task vs ValueTask|Task vs ValueTask (.NET)]]
 │   └── [[Go routines|Goroutines y Channels (Go)]]
 ├── 🐳 Contenedores
 │   ├── [[Docker - Índice]]  ← MOC propio: imágenes, Dockerfile, volúmenes, redes, Compose, Swarm, producción
@@ -45,7 +46,7 @@ tipo: MOC
 4. **Microservicios → Resiliencia.** La red falla: [[Circuit Breaker]], [[Bulkhead]] y [[Retry con Backoff Exponencial]] son la respuesta, y también requieren idempotencia.
 5. **Datos.** [[ACID en Bases de Datos]] explica las garantías del mundo relacional; [[Bases de Datos SQL vs NoSQL]] cuándo renunciar a parte de ellas; [[Teorema CAP y BASE]] por qué.
 6. **APIs.** [[Diseño Api Rest]] y [[Status Code]] definen el contrato con el exterior; el [[API Gateway]] es donde ese contrato se expone en microservicios.
-7. **Runtime.** [[Task vs ValueTask]] y [[Go routines]] cubren la concurrencia en los dos lenguajes que uso, con una comparación cruzada.
+7. **Runtime.** El [[00 - Async en .NET - Índice|curso de Async en .NET]] (con [[Task vs ValueTask]] como nota de rendimiento) y [[Go routines]] cubren la concurrencia en los dos lenguajes que uso, con una comparación cruzada.
 8. **Contenedores.** [[Docker]] es la forma habitual de empaquetar y desplegar cada microservicio; [[Docker Compose]] levanta el sistema en local y [[Redes en Docker|sus redes]] dan el descubrimiento por nombre que en producción resuelven [[Service Discovery]] o Kubernetes.
 9. **Rol.** El [[Líder Técnico (Tech Lead)]] es quien debe tener criterio sobre todo lo anterior.
 
@@ -67,11 +68,12 @@ tipo: MOC
 
 ## Rutas de estudio sugeridas
 
-- **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Task vs ValueTask → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
+- **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Async en .NET (niveles 1-7 y [[13 - Anti-patrones, checklist y entrevistas]]) → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
 - **Aprender Docker de cero:** sigue la tabla de episodios de [[Docker - Índice]] (fundamentos → Dockerfile → volúmenes y redes → Compose → Swarm → producción) y repasa con [[Docker - Cheatsheet de comandos]].
 - **Kubernetes para un perfil Senior .NET:** después de Docker, sigue el roadmap de 10 niveles de [[00 - Kubernetes - Índice]] y termina con el [[20 - Proyecto final]].
 - **Redis de cero a experto (perfil .NET):** empieza en [[Qué es Redis]] y sigue los 11 niveles de [[01 - Redis - Roadmap]]; el avance se lleva en [[03 - Redis - Progreso]]. Requiere Docker básico ([[Docker - Índice]]).
+- **Async en .NET de básico a máster:** sigue los 13 niveles de [[00 - Async en .NET - Índice]] y practica con [[14 - Laboratorios y ejercicios]]; repasa con [[13 - Anti-patrones, checklist y entrevistas]].
 - **Preparar AI-901 (Azure AI Fundamentals):** empieza en [[00 - AI-901 Índice general]] y sigue la ruta de estudio de tres semanas que propone.
 - **Rol de Tech Lead:** Líder Técnico → Clean Architecture → DDD (estratégico) → Microservicios (cuándo no) → Gobernanza en Azure.
 
