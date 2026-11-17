@@ -17,6 +17,7 @@ tipo: MOC
 │   └── [[🧠 Domain-Driven Design (DDD) - Curso Completo|Domain-Driven Design]]
 ├── 🏗️ Sistemas distribuidos
 │   ├── [[🏗️ Diseño de Microservicios]]  ← MOC propio con todos los patrones
+│   ├── [[CN 00 - Patrones Cloud Native - Índice|☁️ Patrones Cloud Native]]  ← curso completo: contenedores, comunicación, mensajería, datos, resiliencia, escalado, entrega, seguridad, observabilidad
 │   ├── [[Idempotencia]]
 │   └── [[Teorema CAP y BASE]]
 ├── 💾 Datos
@@ -46,7 +47,8 @@ tipo: MOC
 6. **APIs.** [[Diseño Api Rest]] y [[Status Code]] definen el contrato con el exterior; el [[API Gateway]] es donde ese contrato se expone en microservicios.
 7. **Runtime.** [[Task vs ValueTask]] y [[Go routines]] cubren la concurrencia en los dos lenguajes que uso, con una comparación cruzada.
 8. **Contenedores.** [[Docker]] es la forma habitual de empaquetar y desplegar cada microservicio; [[Docker Compose]] levanta el sistema en local y [[Redes en Docker|sus redes]] dan el descubrimiento por nombre que en producción resuelven [[Service Discovery]] o Kubernetes.
-9. **Rol.** El [[Líder Técnico (Tech Lead)]] es quien debe tener criterio sobre todo lo anterior.
+9. **Cloud native.** [[CN 00 - Patrones Cloud Native - Índice|Patrones Cloud Native]] reúne el catálogo completo (≈70 patrones y antipatrones) y enlaza a las notas detalladas de microservicios, Kubernetes, Redis y Service Bus.
+10. **Rol.** El [[Líder Técnico (Tech Lead)]] es quien debe tener criterio sobre todo lo anterior.
 
 ## Puentes con las notas de Azure (AZ-900)
 
@@ -68,6 +70,7 @@ tipo: MOC
 
 - **Preparar entrevista de backend .NET (2 semanas):** SOLID → Clean Architecture → ACID → SQL vs NoSQL → REST + Status Codes → Task vs ValueTask → Microservicios (visión general) → Circuit Breaker, Retry, Idempotencia.
 - **Profundizar en microservicios:** DDD → Diseño de Microservicios → Saga → Outbox → CQRS → Event Sourcing → CAP → API Gateway → Service Discovery → resiliencia completa.
+- **Patrones cloud native (1–3 semanas):** sigue las rutas de [[CN 00 - Patrones Cloud Native - Índice]] (esencial, arquitecto o entrevista) y repasa con [[CN 14 - Cheatsheet]].
 - **Aprender Docker de cero:** sigue la tabla de episodios de [[Docker - Índice]] (fundamentos → Dockerfile → volúmenes y redes → Compose → Swarm → producción) y repasa con [[Docker - Cheatsheet de comandos]].
 - **Kubernetes para un perfil Senior .NET:** después de Docker, sigue el roadmap de 10 niveles de [[00 - Kubernetes - Índice]] y termina con el [[20 - Proyecto final]].
 - **Redis de cero a experto (perfil .NET):** empieza en [[Qué es Redis]] y sigue los 11 niveles de [[01 - Redis - Roadmap]]; el avance se lleva en [[03 - Redis - Progreso]]. Requiere Docker básico ([[Docker - Índice]]).

@@ -7,6 +7,7 @@ tipo: MOC
 # 🏗️ Diseño de Microservicios
 
 > [!info] Esta nota es el **mapa de contenidos (MOC)** de microservicios. Cada patrón tiene su propia nota; aquí está la visión general y cómo se relacionan.
+> El catálogo ampliado de patrones (contenedores, mensajería, caché, escalado, despliegue, seguridad, observabilidad) está en [[CN 00 - Patrones Cloud Native - Índice|☁️ Patrones Cloud Native]].
 
 ## ¿Qué son los microservicios?
 
