@@ -42,7 +42,7 @@ Porque en un sistema distribuido los servicios no están siempre disponibles, no
 - **No garantiza exactly-once.** Garantiza at-least-once: tu código recibirá duplicados. Ver [[03 - Confiabilidad y manejo de errores#At-least-once delivery|At-least-once delivery]].
 - **No es un event store ni un log reproducible.** Un mensaje completado desaparece. Para *replay* necesitas Event Hubs/Kafka.
 - **No es para telemetría masiva** (millones de eventos/segundo). Ver [[01 - Fundamentos y arquitectura#Service Bus vs Storage Queue vs Event Grid vs Event Hubs|Service Bus vs Storage Queue vs Event Grid vs Event Hubs]].
-- **No sustituye a una transacción distribuida con tu BD.** Ver [[Outbox Pattern]].
+- **No sustituye a una transacción distribuida con tu BD.** Ver [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]].
 
 ### Arquitectura mínima
 ```mermaid
@@ -153,7 +153,7 @@ sequenceDiagram
 - Devolver `200 OK` al usuario cuando el trabajo aún no está hecho. Usa `202 Accepted` + un endpoint de estado.
 
 ### Relación con otros conceptos
-- [[01 - Fundamentos y arquitectura#Message Broker|Message Broker]] · [[Eventual Consistency]] · [[Commands vs Events]] · [[Event-Driven Architecture]]
+- [[01 - Fundamentos y arquitectura#Message Broker|Message Broker]] · [[08 - Patrones de arquitectura#Eventual Consistency|Eventual Consistency]] · [[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]] · [[08 - Patrones de arquitectura#Event-Driven Architecture|Event-Driven Architecture]]
 
 ### Puntos clave
 - Asíncrono arquitectónico ≠ `async/await`.
@@ -197,7 +197,7 @@ En la queue, A y A' son **instancias del mismo servicio compitiendo**. En pub/su
 Esta distinción explica casi todas las comparativas: [[01 - Fundamentos y arquitectura#Service Bus vs Storage Queue vs Event Grid vs Event Hubs|Service Bus vs Storage Queue vs Event Grid vs Event Hubs]].
 
 ### Relación con otros conceptos
-- [[01 - Fundamentos y arquitectura#Que es Azure Service Bus|Que es Azure Service Bus]] · [[Competing Consumers]] · [[Publisher Subscriber]]
+- [[01 - Fundamentos y arquitectura#Que es Azure Service Bus|Que es Azure Service Bus]] · [[08 - Patrones de arquitectura#Competing Consumers|Competing Consumers]] · [[08 - Patrones de arquitectura#Publisher Subscriber|Publisher Subscriber]]
 
 ---
 
@@ -253,7 +253,7 @@ Event Grid puede entregar a una queue de Service Bus: así obtienes fiabilidad (
 - *Un blob se sube y hay que procesarlo de forma fiable con reintentos y DLQ. ¿Qué usas?* → Event Grid (detecta el evento) → Service Bus queue (fiabilidad) → worker. Justifica cada salto.
 
 ### Relación con otros conceptos
-- [[01 - Fundamentos y arquitectura#Message Broker|Message Broker]] · [[Service Bus vs otras tecnologias]] (Kafka, RabbitMQ, SQS/SNS — 🚧)
+- [[01 - Fundamentos y arquitectura#Message Broker|Message Broker]] · [[09 - Produccion y operacion#Service Bus vs otras tecnologias|Service Bus vs otras tecnologias]] (Kafka, RabbitMQ, SQS/SNS — 🚧)
 
 ---
 
@@ -299,7 +299,7 @@ Contenedor y **unidad de configuración**: tier (Basic/Standard/Premium), messag
 | ¿Añadir un consumidor nuevo requiere cambiar el productor? | Sí | No, basta crear una subscription |
 | Tier mínimo | Basic | Standard |
 
-Relación con el tipo de mensaje: [[Commands vs Events]].
+Relación con el tipo de mensaje: [[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]].
 
 ### Propiedades de entidad que importan (y cuáles son inmutables)
 | Propiedad | Default [Probable] | ¿Se puede cambiar luego? |
@@ -345,7 +345,7 @@ if (!await admin.QueueExistsAsync("orders"))
 > Crea entidades con **IaC** (Bicep/Terraform), no desde el código de la aplicación. La identidad de la app no debería tener permisos de gestión (`Manage`/Data Owner).
 
 ### Relación con otros conceptos
-- [[01 - Fundamentos y arquitectura#Ciclo de vida de un mensaje|Ciclo de vida de un mensaje]] · [[02 - Queues y Topics#Topics y Subscriptions|Topics y Subscriptions]] · [[02 - Queues y Topics#Filters y Rules|Filters y Rules]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[Tiers y facturacion]]
+- [[01 - Fundamentos y arquitectura#Ciclo de vida de un mensaje|Ciclo de vida de un mensaje]] · [[02 - Queues y Topics#Topics y Subscriptions|Topics y Subscriptions]] · [[02 - Queues y Topics#Filters y Rules|Filters y Rules]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[09 - Produccion y operacion#Tiers y facturacion|Tiers y facturacion]]
 
 ### Puntos clave
 - Namespace = configuración y capacidad. Queue/Topic = entidad. Subscription = queue virtual.
@@ -439,7 +439,7 @@ graph LR
 - **Standard**: 256 KB (body + todas las propiedades).
 - **Premium**: 1 MB por defecto por entidad; configurable hasta **100 MB** solo con AMQP y **sin batching**. Los mensajes grandes reducen throughput y aumentan latencia.
 - Cabeceras/propiedades tienen un límite propio (≈64 KB) [Probable].
-- Más allá del límite: [[Claim Check Pattern]] (body en Blob Storage, referencia en el mensaje).
+- Más allá del límite: [[08 - Patrones de arquitectura#Claim Check Pattern|Claim Check Pattern]] (body en Blob Storage, referencia en el mensaje).
 
 Fuente: [Service Bus quotas](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-quotas) · [Premium messaging](https://learn.microsoft.com/azure/service-bus-messaging/service-bus-premium-messaging)
 
@@ -475,7 +475,7 @@ var ce = new CloudEvent("/orders", "Contoso.Orders.OrderPlaced", evt);
 var msg = new ServiceBusMessage(new BinaryData(ce)) { ContentType = "application/cloudevents+json" };
 ```
 
-### Versionado de mensajes (resumen; detalle en [[Versionado de mensajes]])
+### Versionado de mensajes (resumen; detalle en [[08 - Patrones de arquitectura#Versionado de mensajes|Versionado de mensajes]])
 1. **Cambios aditivos** (nuevo campo opcional) no rompen: el consumidor ignora lo que no conoce (*tolerant reader*).
 2. **Cambios incompatibles** → nuevo tipo (`OrderPlacedV2`) o `schema-version` en `ApplicationProperties`, y los consumidores soportan N y N-1 durante la migración.
 3. Nunca renombres ni cambies el tipo de un campo existente.

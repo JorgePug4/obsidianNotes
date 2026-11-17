@@ -123,7 +123,7 @@ var processor = client.CreateProcessor("orders", new ServiceBusProcessorOptions
 No mantengas un lock una hora. Patrón recomendado: recibir → registrar el trabajo en tu BD (estado "en curso") → **completar el mensaje** → procesar fuera del lock → publicar un evento al terminar. El estado vive en tu BD, no en el lock.
 
 ### Relación
-- [[02 - Queues y Topics#Peek-Lock vs Receive-and-Delete|Peek-Lock vs Receive-and-Delete]] · [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[Troubleshooting - Lock expired]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] (las sesiones tienen su propio *session lock*)
+- [[02 - Queues y Topics#Peek-Lock vs Receive-and-Delete|Peek-Lock vs Receive-and-Delete]] · [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[10 - Troubleshooting#Troubleshooting - Lock expired|Lock expired]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] (las sesiones tienen su propio *session lock*)
 
 ### Pregunta de entrevista
 *Tu consumidor tarda 7 minutos y el máximo de lock es 5. ¿Qué haces?* → Renovación automática del processor con `MaxAutoLockRenewalDuration` > 7 min, idempotencia por si falla la renovación, y cuestionar si ese trabajo debería hacerse bajo lock (patrón de la sección anterior).
@@ -320,7 +320,7 @@ La comprobación "¿sigue pendiente?" es obligatoria: la cancelación puede perd
 - Programar a meses vista sin revisar el TTL de la entidad.
 
 ### Relación
-- [[04 - NET y entorno local#Enviar mensajes en NET|Enviar mensajes en NET]] · [[02 - Queues y Topics#TTL y expiracion|TTL y expiracion]] · [[Saga Pattern]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]]
+- [[04 - NET y entorno local#Enviar mensajes en NET|Enviar mensajes en NET]] · [[02 - Queues y Topics#TTL y expiracion|TTL y expiracion]] · [[08 - Patrones de arquitectura#Saga Pattern|Saga Pattern]] · [[03 - Confiabilidad y manejo de errores#Retry Policies|Retry Policies]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]]
 
 ---
 
@@ -397,7 +397,7 @@ Fuentes: [Quotas](https://learn.microsoft.com/azure/service-bus-messaging/servic
 La primera opción suele ser el punto de partida razonable.
 
 ### Cuándo NO usar topics
-- Solo hay un consumidor posible y es un **comando** dirigido → queue ([[Commands vs Events]]).
+- Solo hay un consumidor posible y es un **comando** dirigido → queue ([[08 - Patrones de arquitectura#Commands vs Events|Commands vs Events]]).
 - Necesitas replay para suscriptores nuevos → un suscriptor nuevo **no recibe** los mensajes publicados antes de crearse. Eso es Event Hubs/Kafka.
 
 ### Errores comunes
@@ -406,7 +406,7 @@ La primera opción suele ser el punto de partida razonable.
 - Olvidar monitorizar la DLQ **de cada subscription**.
 
 ### Relación
-- [[02 - Queues y Topics#Filters y Rules|Filters y Rules]] · [[02 - Queues y Topics#Auto-forwarding|Auto-forwarding]] · [[Publisher Subscriber]] · [[01 - Fundamentos y arquitectura#Namespace y entidades|Namespace y entidades]] · [[06 - Laboratorios#Lab 05 - Topics y Subscriptions|Lab 05 - Topics y Subscriptions]]
+- [[02 - Queues y Topics#Filters y Rules|Filters y Rules]] · [[02 - Queues y Topics#Auto-forwarding|Auto-forwarding]] · [[08 - Patrones de arquitectura#Publisher Subscriber|Publisher Subscriber]] · [[01 - Fundamentos y arquitectura#Namespace y entidades|Namespace y entidades]] · [[06 - Laboratorios#Lab 05 - Topics y Subscriptions|Lab 05 - Topics y Subscriptions]]
 
 ### Pregunta de entrevista
 *¿Cómo escalas el servicio de Billing sin cobrar dos veces?* → Más instancias leyendo la **misma** subscription (competing consumers) + consumidor idempotente. Nunca una subscription por instancia.
@@ -523,7 +523,7 @@ graph LR
 
 ### Qué NO hace
 - No transforma el mensaje.
-- No cruza namespaces ni regiones (para eso: un consumidor que reenvíe, o [[Geo-Replication]]).
+- No cruza namespaces ni regiones (para eso: un consumidor que reenvíe, o [[09 - Produccion y operacion#Geo-Replication|Geo-Replication]]).
 - No reemplaza la lógica de reintentos.
 
 ### Errores comunes
@@ -532,4 +532,4 @@ graph LR
 - Olvidar que el destino con sesiones exige `SessionId` en todos los mensajes.
 
 ### Relación
-- [[02 - Queues y Topics#Topics y Subscriptions|Topics y Subscriptions]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]] · [[Inbox Pattern]]
+- [[02 - Queues y Topics#Topics y Subscriptions|Topics y Subscriptions]] · [[03 - Confiabilidad y manejo de errores#Dead Letter Queue|Dead Letter Queue]] · [[03 - Confiabilidad y manejo de errores#Sessions|Sessions]] · [[03 - Confiabilidad y manejo de errores#Transactions|Transactions]] · [[08 - Patrones de arquitectura#Inbox Pattern|Inbox Pattern]]

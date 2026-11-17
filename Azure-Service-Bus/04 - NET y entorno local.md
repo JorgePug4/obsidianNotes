@@ -160,7 +160,7 @@ Idéntico: `client.CreateSender("order-events")`. El productor **no sabe** qué 
 - Sender por entidad, cacheado ([[04 - NET y entorno local#Integracion con ASP.NET Core|Integracion con ASP.NET Core]] muestra cómo con DI).
 - `MessageId` determinista por intención de negocio.
 - Propaga `CancellationToken` siempre.
-- No envíes desde dentro de una transacción de BD esperando atomicidad: no la hay → [[Outbox Pattern]].
+- No envíes desde dentro de una transacción de BD esperando atomicidad: no la hay → [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]].
 - Para alto volumen, agrupa en batches; para baja latencia, envía uno a uno.
 
 ### Errores comunes
@@ -172,7 +172,7 @@ Idéntico: `client.CreateSender("order-events")`. El productor **no sabe** qué 
 | `SendMessagesAsync(lista)` con listas grandes | `MessageSizeExceeded` en producción con datos reales |
 
 ### Relación
-- [[04 - NET y entorno local#SDK moderno de NET|SDK moderno de NET]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]] · [[Outbox Pattern]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]]
+- [[04 - NET y entorno local#SDK moderno de NET|SDK moderno de NET]] · [[01 - Fundamentos y arquitectura#Anatomia de un mensaje|Anatomia de un mensaje]] · [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[03 - Confiabilidad y manejo de errores#Duplicate Detection|Duplicate Detection]]
 
 ---
 
@@ -407,7 +407,7 @@ public sealed class ServiceBusPublisher(IAzureClientFactory<ServiceBusSender> se
         }, ct);
 }
 ```
-> [!warning] Publicar desde el controlador justo después de `SaveChangesAsync` **no es atómico**. Esto es aceptable para aprender; en producción usa [[Outbox Pattern]].
+> [!warning] Publicar desde el controlador justo después de `SaveChangesAsync` **no es atómico**. Esto es aceptable para aprender; en producción usa [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]].
 
 ### 4. Worker con `BackgroundService`
 ```csharp
@@ -485,13 +485,13 @@ public sealed class OrderWorker(
 - **`ShutdownTimeout`**: el default del host (30 s en .NET 8+ [Probable]) puede ser menor que tu handler más lento.
 
 ### Logging y trazas
-El SDK emite trazas con `ActivitySource` `Azure.Messaging.ServiceBus.*` y propaga contexto W3C (`Diagnostic-Id`/`traceparent`) en las propiedades del mensaje. Con OpenTelemetry/Application Insights obtienes trazas productor→consumidor. Ver [[Metricas clave]] y [[Observabilidad con Application Insights]].
+El SDK emite trazas con `ActivitySource` `Azure.Messaging.ServiceBus.*` y propaga contexto W3C (`Diagnostic-Id`/`traceparent`) en las propiedades del mensaje. Con OpenTelemetry/Application Insights obtienes trazas productor→consumidor. Ver [[09 - Produccion y operacion#Metricas clave|Metricas clave]] y [[09 - Produccion y operacion#Observabilidad con Application Insights|Observabilidad con Application Insights]].
 
 ### Health checks
 Un health check que envíe un mensaje en cada sondeo genera coste y ruido. Mejor: comprobar que el processor `IsProcessing` y que la última recepción/error es reciente.
 
 ### Relación
-- [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[04 - NET y entorno local#SDK moderno de NET|SDK moderno de NET]] · [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · [[Outbox Pattern]] · [[06 - Laboratorios#Lab 04 - BackgroundService|Lab 04 - BackgroundService]]
+- [[04 - NET y entorno local#ServiceBusProcessor|ServiceBusProcessor]] · [[04 - NET y entorno local#SDK moderno de NET|SDK moderno de NET]] · [[05 - Seguridad y performance#Seguridad con Entra ID y RBAC|Seguridad con Entra ID y RBAC]] · [[08 - Patrones de arquitectura#Outbox Pattern|Outbox Pattern]] · [[06 - Laboratorios#Lab 04 - BackgroundService|Lab 04 - BackgroundService]]
 
 ---
 
